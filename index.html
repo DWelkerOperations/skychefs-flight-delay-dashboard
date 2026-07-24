@@ -18,17 +18,12 @@
 
     * { box-sizing: border-box; }
 
-    html, body {
-      height: 100%;
-      margin: 0;
-    }
+    html, body { margin: 0; }
 
     body {
       background: var(--page);
       color: var(--ink);
       font-family: Arial, Helvetica, sans-serif;
-      display: grid;
-      grid-template-rows: auto minmax(0, 1fr) auto;
     }
 
     .brand-accent {
@@ -91,7 +86,8 @@
     }
 
     main {
-      min-height: 0;
+      margin: 0 auto;
+      max-width: 1540px;
       padding: 18px;
     }
 
@@ -100,7 +96,7 @@
       border: 1px solid var(--line);
       border-radius: 12px;
       display: block;
-      height: 100%;
+      height: 720px;
       min-height: 720px;
       width: 100%;
     }
@@ -180,5 +176,18 @@
   <footer>
     SkyChefs operational performance snapshot · Airline reflects the marketed flight-number prefix and may include codeshares
   </footer>
+  <script>
+    (() => {
+      const frame = document.querySelector(".dashboard-frame");
+      window.addEventListener("message", (event) => {
+        const sameOrigin = location.protocol === "file:" || event.origin === location.origin;
+        if (!sameOrigin || event.data?.type !== "skychefs-dashboard-height") return;
+        const height = Number(event.data.height);
+        if (Number.isFinite(height) && height >= 720 && height <= 12000) {
+          frame.style.height = `${Math.ceil(height)}px`;
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
