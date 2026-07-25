@@ -66,7 +66,8 @@ input {
   text-transform: uppercase;
 }
 
-.control-field select {
+.control-field select,
+.control-field input {
   background: var(--clarity-white);
   border: 1px solid var(--line-strong);
   border-radius: 6px;
@@ -77,6 +78,7 @@ input {
 }
 
 .control-field select:focus-visible,
+.control-field input:focus-visible,
 .segmented-control:focus-within {
   outline: 3px solid rgba(237, 38, 48, 0.25);
   outline-offset: 2px;
@@ -119,6 +121,10 @@ input {
   font-weight: 700;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .scope-summary {
   align-self: center;
   color: var(--muted);
@@ -126,6 +132,54 @@ input {
   line-height: 1.45;
   margin: 20px 0 0;
   text-align: right;
+}
+
+.hourly-section {
+  border-bottom: 1px solid var(--line);
+  padding: 36px 0 42px;
+}
+
+.hourly-control-bar {
+  align-items: end;
+  background: var(--soft);
+  border-left: 3px solid var(--pride-red);
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(190px, 230px) minmax(390px, auto) minmax(170px, 220px) minmax(240px, 1fr);
+  margin-bottom: 28px;
+  padding: 16px 18px;
+}
+
+.segmented-control-three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.segmented-control-three label {
+  min-width: 120px;
+}
+
+.hourly-range-inputs {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(135px, 1fr));
+}
+
+.hourly-status {
+  align-self: center;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 20px 0 0;
+  text-align: right;
+}
+
+.hourly-status.is-error {
+  color: var(--pride-red);
+  font-weight: 700;
+}
+
+.hourly-trend-block {
+  margin-top: 2px;
 }
 
 .direction-section {
@@ -272,6 +326,15 @@ input {
   border-top-style: dotted;
 }
 
+.legend-arrival {
+  border-color: var(--pride-red);
+}
+
+.legend-departure {
+  border-color: var(--series-dark);
+  border-top-style: dashed;
+}
+
 .chart-wrap {
   min-height: 300px;
   position: relative;
@@ -328,6 +391,17 @@ input {
   color: var(--series-mid);
   stroke: var(--series-mid);
   stroke-dasharray: 2 7;
+}
+
+.trend-chart .series-arrival {
+  color: var(--pride-red);
+  stroke: var(--pride-red);
+}
+
+.trend-chart .series-departure {
+  color: var(--series-dark);
+  stroke: var(--series-dark);
+  stroke-dasharray: 9 6;
 }
 
 .trend-chart .marker {
@@ -443,6 +517,20 @@ tbody tr:hover {
   .metric-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .hourly-control-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hourly-period-control,
+  .hourly-status {
+    grid-column: 1 / -1;
+  }
+
+  .hourly-status {
+    margin-top: 0;
+    text-align: left;
+  }
 }
 
 @media (max-width: 680px) {
@@ -454,6 +542,34 @@ tbody tr:hover {
     align-items: stretch;
     grid-template-columns: 1fr;
     padding: 15px;
+  }
+
+  .hourly-control-bar {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+
+  .hourly-period-control,
+  .hourly-status {
+    grid-column: auto;
+  }
+
+  .segmented-control-three {
+    grid-template-columns: 1fr;
+  }
+
+  .segmented-control-three label {
+    min-width: 0;
+  }
+
+  .segmented-control-three label + input + label {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .hourly-range-inputs {
+    grid-template-columns: 1fr;
   }
 
   .scope-summary {

@@ -31,6 +31,105 @@
       <p id="scope-summary" class="scope-summary" aria-live="polite"></p>
     </section>
 
+    <section class="hourly-section" aria-labelledby="hourly-heading">
+      <header class="section-heading">
+        <div>
+          <p class="eyebrow">Scheduled-time analysis</p>
+          <h1 id="hourly-heading">Hourly performance</h1>
+        </div>
+        <p>Compare arrival and departure results by scheduled local hour.</p>
+      </header>
+
+      <section class="hourly-control-bar" aria-label="Hourly performance controls">
+        <div class="control-field">
+          <label for="hourly-metric">Metric</label>
+          <select id="hourly-metric" name="hourly-metric">
+            <option value="otp">On time (&lt;15 min late)</option>
+            <option value="d30">30+ min delayed</option>
+            <option value="d60">60+ min delayed</option>
+            <option value="d90">90+ min delayed</option>
+          </select>
+        </div>
+
+        <fieldset class="grain-control hourly-period-control">
+          <legend>Period</legend>
+          <div class="segmented-control segmented-control-three">
+            <input type="radio" id="hourly-period-month" name="hourly-period" value="month" checked>
+            <label for="hourly-period-month">Monthly average</label>
+            <input type="radio" id="hourly-period-day" name="hourly-period" value="day">
+            <label for="hourly-period-day">Single day</label>
+            <input type="radio" id="hourly-period-range" name="hourly-period" value="range">
+            <label for="hourly-period-range">Date range</label>
+          </div>
+        </fieldset>
+
+        <div class="control-field hourly-period-input" id="hourly-month-control">
+          <label for="hourly-month">Month</label>
+          <select id="hourly-month" name="hourly-month"></select>
+        </div>
+
+        <div class="control-field hourly-period-input" id="hourly-day-control" hidden>
+          <label for="hourly-day">Date</label>
+          <input id="hourly-day" name="hourly-day" type="date" min="2026-02-01" max="2026-07-20" value="2026-07-20">
+        </div>
+
+        <div class="hourly-range-inputs" id="hourly-range-control" hidden>
+          <div class="control-field">
+            <label for="hourly-range-start">Start date</label>
+            <input id="hourly-range-start" name="hourly-range-start" type="date" min="2026-02-01" max="2026-07-20" value="2026-07-01">
+          </div>
+          <div class="control-field">
+            <label for="hourly-range-end">End date</label>
+            <input id="hourly-range-end" name="hourly-range-end" type="date" min="2026-02-01" max="2026-07-20" value="2026-07-20">
+          </div>
+        </div>
+
+        <p id="hourly-status" class="hourly-status" aria-live="polite">Loading hourly data…</p>
+      </section>
+
+      <section class="trend-block hourly-trend-block" aria-labelledby="hourly-chart-title">
+        <div class="trend-heading">
+          <div>
+            <h2 id="hourly-chart-title">On-time performance by scheduled hour</h2>
+            <p id="hourly-chart-subtitle">Volume-weighted rate across the selected month.</p>
+          </div>
+          <div class="series-legend" aria-label="Movement direction legend">
+            <span><i class="legend-line legend-arrival" aria-hidden="true"></i>Arrivals</span>
+            <span><i class="legend-line legend-departure" aria-hidden="true"></i>Departures</span>
+          </div>
+        </div>
+        <div class="chart-wrap" id="hourly-chart-wrap">
+          <svg id="hourly-chart" class="trend-chart" viewBox="0 0 960 340" role="img" aria-labelledby="hourly-chart-title hourly-chart-desc"></svg>
+          <p id="hourly-chart-desc" class="sr-only"></p>
+          <div id="hourly-tooltip" class="chart-tooltip" hidden></div>
+        </div>
+      </section>
+
+      <section class="table-block" aria-labelledby="hourly-table-title">
+        <div class="table-heading">
+          <h2 id="hourly-table-title">Hourly detail</h2>
+          <p>Rates use valid movements; counts show the matching numerator and denominator.</p>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <caption>Arrival and departure performance by scheduled hour</caption>
+            <thead>
+              <tr>
+                <th scope="col">Scheduled hour</th>
+                <th scope="col" id="hourly-arrival-rate-heading">Arrival on time</th>
+                <th scope="col">Valid arrivals</th>
+                <th scope="col">Arrival coverage</th>
+                <th scope="col" id="hourly-departure-rate-heading">Departure on time</th>
+                <th scope="col">Valid departures</th>
+                <th scope="col">Departure coverage</th>
+              </tr>
+            </thead>
+            <tbody id="hourly-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
     <section class="direction-section" aria-labelledby="arrivals-heading">
       <header class="section-heading">
         <div>
@@ -198,6 +297,8 @@
       <p>
         This static snapshot covers scheduled movements from February 1 through July 20, 2026.
         Weekly periods are Sunday–Saturday; July 19–20 is a partial week. July is also a partial month.
+        On-time performance means less than 15 minutes late. Hourly analysis groups by scheduled local
+        hour; monthly hourly rates aggregate matching movements before calculating the percentage.
         Rates use valid, deduplicated movements as the denominator. Missing actual times and timestamp
         differences outside −180 to +1,440 minutes are excluded. Airline is the two-character marketed
         flight-number prefix and may include codeshares. Location uses the first three station-label
@@ -209,5 +310,6 @@
 
   <script src="assets/dashboard-data.js"></script>
   <script src="assets/dashboard-app.js"></script>
+  <script src="assets/hourly-app.js"></script>
 </body>
 </html>
