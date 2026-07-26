@@ -95,8 +95,8 @@
   }
 
   function renderMetrics(kind, packed) {
-    const counts = packed ? packed.o : [0, 0, 0, 0, 0];
-    const [scheduled, valid, delay30, delay60, delay90] = counts;
+    const counts = packed ? packed.o : [0, 0, 0, 0, 0, 0];
+    const [scheduled, valid, delay30, delay60, delay90, delaySum] = counts;
     const prefix = kind;
     const noun = directionLabel(kind);
 
@@ -105,6 +105,9 @@
       ? `${countFormat.format(scheduled)} scheduled ${noun}`
       : "No movements for this filter";
     document.getElementById(`${prefix}-coverage`).textContent = packed ? formatPct(pct(valid, scheduled)) : "—";
+    document.getElementById(`${prefix}-average`).textContent = packed
+      ? formatDelay(valid > 0 ? delaySum / valid : null)
+      : "—";
 
     [30, 60, 90].forEach((threshold, index) => {
       const delayed = [delay30, delay60, delay90][index];
@@ -132,7 +135,8 @@
     const { periods, values, noun } = periodRows(packed);
     const body = document.getElementById(`${kind}-table-body`);
     body.replaceChildren();
-    setText(`${kind}-table-title`, `${kind === "arrival" ? "Arrival" : "Departure"} metrics by ${noun}`);
+    const periodLabel = noun === "week" ? "Week" : "Month";
+    setText(`${kind}-table-title`, `${kind === "arrival" ? "Arrival" : "Departure"} Metrics by ${periodLabel}`);
 
     if (!packed) {
       const row = document.createElement("tr");
@@ -302,7 +306,8 @@
 
   function renderChart(kind, packed) {
     const { periods, values, noun } = periodRows(packed);
-    const title = `${kind === "arrival" ? "Arrival" : "Departure"} delay rates by ${noun}`;
+    const periodLabel = noun === "week" ? "Week" : "Month";
+    const title = `${kind === "arrival" ? "Arrival" : "Departure"} Delay Rates by ${periodLabel}`;
     setText(`${kind}-chart-title`, title);
     setText(
       `${kind}-chart-subtitle`,
@@ -406,7 +411,9 @@
   function renderAverageChart(kind, packed, domain) {
     const { periods, values, noun } = periodRows(packed);
     const direction = kind === "arrival" ? "arrival" : "departure";
-    const title = `Average ${direction} delay by ${noun}`;
+    const directionTitle = kind === "arrival" ? "Arrival" : "Departure";
+    const periodLabel = noun === "week" ? "Week" : "Month";
+    const title = `Average ${directionTitle} Delay by ${periodLabel}`;
     setText(`${kind}-average-chart-title`, title);
     setText(
       `${kind}-average-chart-subtitle`,
