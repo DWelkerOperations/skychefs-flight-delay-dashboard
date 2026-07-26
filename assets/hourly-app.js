@@ -335,7 +335,7 @@
   }
 
   function renderChart(arrivals, departures, selection) {
-    const title = "Average delay by scheduled hour";
+    const title = "Average Delay by Scheduled Hour";
     const scopeLocation = locationSelect.value === "all" ? "all locations" : locationSelect.value;
     const scopeAirline = airlineSelect.value === "all" ? "all airlines" : airlineSelect.value;
     const subtitle = `${selection.label} · ${scopeLocation} · ${scopeAirline} · positive is late; negative is early · lines require 10+ valid movements per hour.`;

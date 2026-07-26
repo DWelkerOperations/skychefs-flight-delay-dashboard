@@ -350,14 +350,14 @@ input {
 }
 
 .chart-wrap {
-  min-height: 300px;
+  min-height: 270px;
   position: relative;
 }
 
 .trend-chart {
   display: block;
   height: auto;
-  max-height: 390px;
+  max-height: 350px;
   overflow: visible;
   width: 100%;
 }
@@ -592,7 +592,7 @@ tbody tr:hover {
 }
 
 .panel-heading {
-  margin-bottom: 22px;
+  margin-bottom: 18px;
 }
 
 .panel-heading h1,
@@ -635,8 +635,8 @@ tbody tr:hover {
 .direction-summary > span {
   background: var(--soft);
   border-radius: 7px;
-  min-width: 150px;
-  padding: 11px 13px;
+  min-width: 140px;
+  padding: 10px 12px;
 }
 
 .direction-summary small,
@@ -672,7 +672,7 @@ tbody tr:hover {
 
 .threshold-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 0 0 18px;
+  margin: 18px 0 24px;
 }
 
 .threshold-grid .metric-card {
@@ -681,7 +681,7 @@ tbody tr:hover {
 }
 
 .direction-section > .trend-block {
-  margin: 22px 0 16px;
+  margin: 18px 0 14px;
 }
 
 .direction-section > .average-delay-block {
@@ -845,6 +845,10 @@ tbody tr:hover {
     min-width: 0;
   }
 
+  .direction-summary > span:last-child {
+    grid-column: 1 / -1;
+  }
+
   .threshold-grid {
     grid-template-columns: 1fr;
   }
@@ -854,7 +858,7 @@ tbody tr:hover {
   }
 
   .chart-wrap {
-    min-height: 230px;
+    min-height: 210px;
   }
 }
 
