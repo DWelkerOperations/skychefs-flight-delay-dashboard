@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="description" content="Interactive SkyChefs arrival and departure delay dashboard.">
   <title>SkyChefs Airlines On Time Performance Dashboard</title>
-  <link rel="stylesheet" href="assets/dashboard.css?v=4">
+  <link rel="stylesheet" href="assets/dashboard.css?v=5">
 </head>
 <body>
   <main class="dashboard-shell">
@@ -42,7 +42,7 @@
         aria-controls="view-hourly-panel"
         tabindex="-1">
         <strong>By scheduled hour</strong>
-        <span>On-time and delay patterns across the day</span>
+        <span>Average delay across the operating day</span>
       </button>
     </nav>
 
@@ -256,21 +256,11 @@
         <div>
           <p class="eyebrow">Scheduled-time analysis</p>
           <h1 id="hourly-heading">Performance by scheduled hour</h1>
-          <p>Compare arrival and departure results across the operating day.</p>
+          <p>Compare average arrival and departure delay across the operating day.</p>
         </div>
       </header>
 
       <section class="hourly-control-bar" aria-label="Hourly performance controls">
-        <div class="control-field">
-          <label for="hourly-metric">Metric</label>
-          <select id="hourly-metric" name="hourly-metric">
-            <option value="otp">On time (&lt;15 min late)</option>
-            <option value="d30">30+ min delayed</option>
-            <option value="d60">60+ min delayed</option>
-            <option value="d90">90+ min delayed</option>
-          </select>
-        </div>
-
         <div class="control-field">
           <label for="hourly-period-mode">Date selection</label>
           <select id="hourly-period-mode" name="hourly-period-mode">
@@ -307,8 +297,8 @@
       <section class="trend-block hourly-trend-block" aria-labelledby="hourly-chart-title">
         <div class="trend-heading">
           <div>
-            <h2 id="hourly-chart-title">On-time performance by scheduled hour</h2>
-            <p id="hourly-chart-subtitle">Volume-weighted rate across the selected month.</p>
+            <h2 id="hourly-chart-title">Average delay by scheduled hour</h2>
+            <p id="hourly-chart-subtitle">Volume-weighted average delay across the selected month.</p>
           </div>
           <div class="series-legend" aria-label="Movement direction legend">
             <span><i class="legend-line legend-arrival" aria-hidden="true"></i>Arrivals</span>
@@ -327,7 +317,7 @@
         <section class="table-block" aria-labelledby="hourly-table-title">
           <div class="table-heading">
             <h2 id="hourly-table-title">Hourly detail</h2>
-            <p>Rates use valid movements; counts show the matching numerator and denominator.</p>
+            <p>All hourly averages are retained here, including hours below the chart’s 10-valid-movement minimum.</p>
           </div>
           <div class="table-scroll">
             <table>
@@ -335,10 +325,10 @@
               <thead>
                 <tr>
                   <th scope="col">Scheduled hour</th>
-                  <th scope="col" id="hourly-arrival-rate-heading">Arrival on time</th>
+                  <th scope="col">Arrival avg delay</th>
                   <th scope="col">Valid arrivals</th>
                   <th scope="col">Arrival coverage</th>
-                  <th scope="col" id="hourly-departure-rate-heading">Departure on time</th>
+                  <th scope="col">Departure avg delay</th>
                   <th scope="col">Valid departures</th>
                   <th scope="col">Departure coverage</th>
                 </tr>
@@ -355,20 +345,20 @@
       <p>
         This static snapshot covers scheduled movements from February 1 through July 20, 2026.
         Weekly periods are Sunday–Saturday; July 19–20 is a partial week. July is also a partial month.
-        On-time performance means less than 15 minutes late. Hourly analysis groups by scheduled local
-        hour; monthly hourly rates aggregate matching movements before calculating the percentage.
-        Rates use valid, deduplicated movements as the denominator. Missing actual times and timestamp
-        differences outside −180 to +1,440 minutes are excluded. Airline is the two-character marketed
-        flight-number prefix and may include codeshares. Location uses the first three station-label
-        characters to merge aliases such as ORD and ORD NEW (MC5). Times are local as recorded.
+        Hourly analysis groups by scheduled local hour. Average delay is total valid delay minutes
+        divided by valid movements after matching movements are aggregated. Positive values are late;
+        negative values are early. Missing actual times and timestamp differences outside −180 to
+        +1,440 minutes are excluded. Airline is the two-character marketed flight-number prefix and
+        may include codeshares. Location uses the first three station-label characters to merge
+        aliases such as ORD and ORD NEW (MC5). Times are local as recorded.
       </p>
       <p class="source-note">Source: All Tasks - Historical Data Testing 2 (3).csv</p>
     </section>
   </main>
 
-  <script src="assets/dashboard-data.js?v=4"></script>
-  <script src="assets/dashboard-app.js?v=4"></script>
-  <script src="assets/hourly-app.js?v=4"></script>
-  <script src="assets/view-app.js?v=4"></script>
+  <script src="assets/dashboard-data.js?v=5"></script>
+  <script src="assets/dashboard-app.js?v=5"></script>
+  <script src="assets/hourly-app.js?v=5"></script>
+  <script src="assets/view-app.js?v=5"></script>
 </body>
 </html>

@@ -153,7 +153,7 @@ input {
   border-left: 3px solid var(--pride-red);
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(180px, 230px) minmax(180px, 230px) minmax(220px, 320px) minmax(300px, 1fr);
+  grid-template-columns: minmax(180px, 230px) minmax(220px, 320px) minmax(300px, 1fr);
   margin-bottom: 28px;
   padding: 16px 18px;
 }
@@ -370,6 +370,11 @@ input {
 .trend-chart .axis-line {
   stroke: var(--line-strong);
   stroke-width: 1.25;
+}
+
+.trend-chart .zero-line {
+  stroke: var(--ink);
+  stroke-width: 1.5;
 }
 
 .trend-chart .axis-label,

@@ -13,35 +13,9 @@
     day: "numeric",
     year: "numeric",
   });
+  const minimumChartObservations = 10;
   const loadedMonths = new Map();
   let renderVersion = 0;
-
-  const metricDefinitions = {
-    otp: {
-      label: "On-time performance",
-      shortLabel: "on time",
-      numeratorIndex: 2,
-      fixedScale: true,
-    },
-    d30: {
-      label: "30+ minute delay rate",
-      shortLabel: "30+ min",
-      numeratorIndex: 3,
-      fixedScale: false,
-    },
-    d60: {
-      label: "60+ minute delay rate",
-      shortLabel: "60+ min",
-      numeratorIndex: 4,
-      fixedScale: false,
-    },
-    d90: {
-      label: "90+ minute delay rate",
-      shortLabel: "90+ min",
-      numeratorIndex: 5,
-      fixedScale: false,
-    },
-  };
 
   const directionDefinitions = [
     {
@@ -62,7 +36,6 @@
 
   const locationSelect = document.getElementById("location-filter");
   const airlineSelect = document.getElementById("airline-filter");
-  const metricSelect = document.getElementById("hourly-metric");
   const periodSelect = document.getElementById("hourly-period-mode");
   const monthSelect = document.getElementById("hourly-month");
   const dayInput = document.getElementById("hourly-day");
@@ -173,7 +146,7 @@
   }
 
   function emptyHours() {
-    return Array.from({ length: 24 }, () => [0, 0, 0, 0, 0, 0]);
+    return Array.from({ length: 24 }, () => [0, 0, 0, 0, 0, 0, 0]);
   }
 
   function aggregateDirection(monthPayloads, months, selection, directionCode) {
@@ -185,7 +158,7 @@
           return;
         }
         rows.forEach((row) => {
-          const [slot, scheduled, valid, onTime, delay30, delay60, delay90] = row;
+          const [slot, scheduled, valid, onTime, delay30, delay60, delay90, delaySum] = row;
           const day = Math.floor(slot / 24) + 1;
           const hour = slot % 24;
           const isoDate = `${month}-${String(day).padStart(2, "0")}`;
@@ -199,6 +172,7 @@
           bucket[3] += delay30;
           bucket[4] += delay60;
           bucket[5] += delay90;
+          bucket[6] += delaySum;
         });
       });
     });
@@ -211,6 +185,30 @@
 
   function formatPct(value) {
     return value === null ? "—" : `${(value * 100).toFixed(1)}%`;
+  }
+
+  function averageDelay(counts) {
+    return counts[1] > 0 ? counts[6] / counts[1] : null;
+  }
+
+  function chartAverageDelay(counts) {
+    return counts[1] >= minimumChartObservations ? averageDelay(counts) : null;
+  }
+
+  function formatDelay(value) {
+    if (value === null) {
+      return "—";
+    }
+    const rounded = Math.abs(value) < 0.05 ? 0 : value;
+    const sign = rounded > 0 ? "+" : rounded < 0 ? "−" : "";
+    return `${sign}${Math.abs(rounded).toFixed(1)} min`;
+  }
+
+  function formatAxisMinutes(value) {
+    const rounded = Math.abs(value) < 0.0001 ? 0 : value;
+    const digits = Number.isInteger(rounded) ? 0 : 1;
+    const sign = rounded > 0 ? "+" : rounded < 0 ? "−" : "";
+    return `${sign}${Math.abs(rounded).toFixed(digits)}`;
   }
 
   function hourLabel(hour) {
@@ -250,9 +248,33 @@
     }).filter(Boolean).join(" ");
   }
 
-  function niceCeiling(values) {
-    const maximum = Math.max(0, ...values.filter((value) => value !== null));
-    return Math.min(1, Math.max(0.1, Math.ceil(maximum * 20) / 20));
+  function niceStep(range, targetTicks = 5) {
+    const rough = Math.max(range, 1) / targetTicks;
+    const magnitude = 10 ** Math.floor(Math.log10(rough));
+    const residual = rough / magnitude;
+    const factor = residual <= 1 ? 1 : residual <= 2 ? 2 : residual <= 5 ? 5 : 10;
+    return factor * magnitude;
+  }
+
+  function delayDomain(values) {
+    const observed = values.filter((value) => value !== null);
+    if (!observed.length) {
+      return { min: 0, max: 10, step: 2 };
+    }
+
+    const rawMin = Math.min(0, ...observed);
+    const rawMax = Math.max(0, ...observed);
+    const rawRange = Math.max(rawMax - rawMin, 5);
+    const padding = Math.max(rawRange * 0.08, 1);
+    const paddedMin = rawMin < 0 ? rawMin - padding : 0;
+    const paddedMax = rawMax > 0 ? rawMax + padding : 0;
+    const step = niceStep(Math.max(paddedMax - paddedMin, 5));
+    const min = Math.floor(paddedMin / step) * step;
+    let max = Math.ceil(paddedMax / step) * step;
+    if (max <= min) {
+      max = min + step;
+    }
+    return { min, max, step };
   }
 
   function markerNode(definition, x, y) {
@@ -274,12 +296,12 @@
     });
   }
 
-  function showTooltip(event, definition, hour, value, numerator, valid) {
+  function showTooltip(event, definition, hour, value, valid) {
     const wrap = document.getElementById("hourly-chart-wrap");
     const tooltip = document.getElementById("hourly-tooltip");
     const wrapRect = wrap.getBoundingClientRect();
     const markRect = event.currentTarget.getBoundingClientRect();
-    tooltip.innerHTML = `<strong>${hourLabel(hour)} · ${definition.label}</strong><br>${formatPct(value)}<br>${countFormat.format(numerator)} of ${countFormat.format(valid)} valid`;
+    tooltip.innerHTML = `<strong>${hourLabel(hour)} · ${definition.label}</strong><br>${formatDelay(value)} average delay<br>${countFormat.format(valid)} valid movements`;
     tooltip.hidden = false;
     const x = markRect.left - wrapRect.left + markRect.width / 2;
     const y = markRect.top - wrapRect.top;
@@ -291,11 +313,11 @@
     document.getElementById("hourly-tooltip").hidden = true;
   }
 
-  function renderChart(arrivals, departures, metric, selection) {
-    const title = `${metric.label} by scheduled hour`;
+  function renderChart(arrivals, departures, selection) {
+    const title = "Average delay by scheduled hour";
     const scopeLocation = locationSelect.value === "all" ? "all locations" : locationSelect.value;
     const scopeAirline = airlineSelect.value === "all" ? "all airlines" : airlineSelect.value;
-    const subtitle = `${selection.label} · ${scopeLocation} · ${scopeAirline} · rates use valid movements; review table volumes for low-sample hours.`;
+    const subtitle = `${selection.label} · ${scopeLocation} · ${scopeAirline} · positive is late; negative is early · lines require 10+ valid movements per hour.`;
     document.getElementById("hourly-chart-title").textContent = title;
     document.getElementById("hourly-chart-subtitle").textContent = subtitle;
 
@@ -305,7 +327,7 @@
     titleNode.textContent = title;
     svg.appendChild(titleNode);
     const descNode = svgElement("desc");
-    descNode.textContent = `Arrival and departure ${metric.label.toLowerCase()} across 24 scheduled local hours for ${selection.label}.`;
+    descNode.textContent = `Average arrival and departure delay in minutes across 24 scheduled local hours for ${selection.label}. Positive values are late and negative values are early. Plotted points require at least 10 valid movements; the table includes every hour.`;
     svg.appendChild(descNode);
     document.getElementById("hourly-chart-desc").textContent = descNode.textContent;
 
@@ -315,24 +337,27 @@
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
     const xScale = (hour) => margin.left + hour * innerWidth / 23;
-    const allRates = [
-      ...arrivals.map((counts) => pct(counts[metric.numeratorIndex], counts[1])),
-      ...departures.map((counts) => pct(counts[metric.numeratorIndex], counts[1])),
+    const allAverages = [
+      ...arrivals.map(chartAverageDelay),
+      ...departures.map(chartAverageDelay),
     ];
-    const yMax = metric.fixedScale ? 1 : niceCeiling(allRates);
-    const yScale = (value) => margin.top + innerHeight - (value / yMax) * innerHeight;
+    const domain = delayDomain(allAverages);
+    const yScale = (value) => (
+      margin.top + (domain.max - value) * innerHeight / (domain.max - domain.min)
+    );
 
-    for (let tick = 0; tick <= 5; tick += 1) {
-      const value = yMax * tick / 5;
+    const tickCount = Math.round((domain.max - domain.min) / domain.step);
+    for (let tick = 0; tick <= tickCount; tick += 1) {
+      const value = domain.min + domain.step * tick;
       const y = yScale(value);
       svg.appendChild(svgElement("line", {
         x1: margin.left,
         x2: width - margin.right,
         y1: y,
         y2: y,
-        class: tick === 0 ? "axis-line" : "grid-line",
+        class: Math.abs(value) < 0.0001 ? "zero-line" : "grid-line",
       }));
-      appendText(svg, `${Math.round(value * 100)}%`, margin.left - 10, y + 4, "axis-label", "end");
+      appendText(svg, formatAxisMinutes(value), margin.left - 10, y + 4, "axis-label", "end");
     }
 
     [0, 3, 6, 9, 12, 15, 18, 21, 23].forEach((hour) => {
@@ -347,10 +372,10 @@
       appendText(svg, hourLabel(hour).replace(":00 ", " "), x, margin.top + innerHeight + 24, "axis-label", "middle");
     });
 
-    appendText(svg, "Percent of valid movements", 14, margin.top + innerHeight / 2, "axis-label", "middle")
+    appendText(svg, "Average delay (minutes)", 14, margin.top + innerHeight / 2, "axis-label", "middle")
       .setAttribute("transform", `rotate(-90 14 ${margin.top + innerHeight / 2})`);
 
-    const hasData = allRates.some((value) => value !== null);
+    const hasData = allAverages.some((value) => value !== null);
     if (!hasData) {
       appendText(svg, "No valid movements for this selection", width / 2, height / 2, "no-data", "middle");
       return;
@@ -358,27 +383,26 @@
 
     directionDefinitions.forEach((definition) => {
       const values = definition.code === "a" ? arrivals : departures;
-      const rates = values.map((counts) => pct(counts[metric.numeratorIndex], counts[1]));
+      const averages = values.map(chartAverageDelay);
       svg.appendChild(svgElement("path", {
-        d: linePath(rates, xScale, yScale),
+        d: linePath(averages, xScale, yScale),
         class: `series-line ${definition.className}`,
       }));
 
-      rates.forEach((value, hour) => {
+      averages.forEach((value, hour) => {
         if (value === null) {
           return;
         }
         const counts = values[hour];
-        const numerator = counts[metric.numeratorIndex];
         const valid = counts[1];
         const marker = markerNode(definition, xScale(hour), yScale(value));
-        const accessible = `${hourLabel(hour)}, ${definition.label}, ${metric.shortLabel}: ${formatPct(value)}, ${countFormat.format(numerator)} of ${countFormat.format(valid)} valid.`;
+        const accessible = `${hourLabel(hour)}, ${definition.label}, average delay: ${formatDelay(value)}, ${countFormat.format(valid)} valid movements.`;
         marker.setAttribute("aria-label", accessible);
         const markerTitle = svgElement("title");
         markerTitle.textContent = accessible;
         marker.appendChild(markerTitle);
         marker.addEventListener("pointerenter", (event) => {
-          showTooltip(event, definition, hour, value, numerator, valid);
+          showTooltip(event, definition, hour, value, valid);
         });
         marker.addEventListener("pointerleave", hideTooltip);
         svg.appendChild(marker);
@@ -386,28 +410,20 @@
     });
   }
 
-  function renderTable(arrivals, departures, metric) {
+  function renderTable(arrivals, departures) {
     const body = document.getElementById("hourly-table-body");
     body.replaceChildren();
-    document.getElementById("hourly-arrival-rate-heading").textContent = `Arrival ${metric.shortLabel}`;
-    document.getElementById("hourly-departure-rate-heading").textContent = `Departure ${metric.shortLabel}`;
 
     for (let hour = 0; hour < 24; hour += 1) {
       const arrival = arrivals[hour];
       const departure = departures[hour];
-      const arrivalRate = pct(arrival[metric.numeratorIndex], arrival[1]);
-      const departureRate = pct(departure[metric.numeratorIndex], departure[1]);
       const row = document.createElement("tr");
       const values = [
         hourLabel(hour),
-        arrivalRate === null
-          ? "—"
-          : `${countFormat.format(arrival[metric.numeratorIndex])} · ${formatPct(arrivalRate)}`,
+        formatDelay(averageDelay(arrival)),
         countFormat.format(arrival[1]),
         formatPct(pct(arrival[1], arrival[0])),
-        departureRate === null
-          ? "—"
-          : `${countFormat.format(departure[metric.numeratorIndex])} · ${formatPct(departureRate)}`,
+        formatDelay(averageDelay(departure)),
         countFormat.format(departure[1]),
         formatPct(pct(departure[1], departure[0])),
       ];
@@ -445,9 +461,8 @@
       }
       const arrivals = aggregateDirection(payloads, months, selection, "a");
       const departures = aggregateDirection(payloads, months, selection, "d");
-      const metric = metricDefinitions[metricSelect.value];
-      renderChart(arrivals, departures, metric, selection);
-      renderTable(arrivals, departures, metric);
+      renderChart(arrivals, departures, selection);
+      renderTable(arrivals, departures);
 
       const scopeLocation = locationSelect.value === "all" ? "All locations" : locationSelect.value;
       const scopeAirline = airlineSelect.value === "all" ? "All airlines" : airlineSelect.value;
@@ -461,7 +476,6 @@
     }
   }
 
-  metricSelect.addEventListener("change", renderHourly);
   periodSelect.addEventListener("change", renderHourly);
   monthSelect.addEventListener("change", renderHourly);
   dayInput.addEventListener("change", renderHourly);
