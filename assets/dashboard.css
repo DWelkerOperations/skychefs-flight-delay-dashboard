@@ -423,6 +423,11 @@ input {
   stroke-dasharray: 9 6;
 }
 
+.trend-chart .series-average {
+  color: var(--pride-red);
+  stroke: var(--pride-red);
+}
+
 .trend-chart .marker {
   fill: var(--clarity-white);
   stroke: currentColor;
@@ -677,6 +682,12 @@ tbody tr:hover {
 
 .direction-section > .trend-block {
   margin: 22px 0 16px;
+}
+
+.direction-section > .average-delay-block {
+  border-top: 1px solid var(--line);
+  margin-top: 12px;
+  padding-top: 18px;
 }
 
 .table-disclosure {
