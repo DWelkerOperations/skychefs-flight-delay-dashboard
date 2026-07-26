@@ -74,6 +74,22 @@
     return value === null ? "—" : `${(value * 100).toFixed(1)}%`;
   }
 
+  function formatDelay(value) {
+    if (value === null) {
+      return "—";
+    }
+    const rounded = Math.abs(value) < 0.05 ? 0 : value;
+    const sign = rounded > 0 ? "+" : rounded < 0 ? "−" : "";
+    return `${sign}${Math.abs(rounded).toFixed(1)} min`;
+  }
+
+  function formatAxisMinutes(value) {
+    const rounded = Math.abs(value) < 0.0001 ? 0 : value;
+    const digits = Number.isInteger(rounded) ? 0 : 1;
+    const sign = rounded > 0 ? "+" : rounded < 0 ? "−" : "";
+    return `${sign}${Math.abs(rounded).toFixed(digits)}`;
+  }
+
   function directionLabel(kind) {
     return kind === "arrival" ? "arrivals" : "departures";
   }
@@ -121,7 +137,7 @@
     if (!packed) {
       const row = document.createElement("tr");
       const cell = document.createElement("td");
-      cell.colSpan = 7;
+      cell.colSpan = 8;
       cell.textContent = "No movements are available for this location and airline combination.";
       row.appendChild(cell);
       body.appendChild(row);
@@ -129,7 +145,7 @@
     }
 
     periods.forEach((period, index) => {
-      const [scheduled, valid, delay30, delay60, delay90] = values[index];
+      const [scheduled, valid, delay30, delay60, delay90, delaySum] = values[index];
       const row = document.createElement("tr");
       const periodCell = document.createElement("td");
       periodCell.textContent = period.l;
@@ -145,6 +161,7 @@
         countFormat.format(scheduled),
         countFormat.format(valid),
         formatPct(pct(valid, scheduled)),
+        formatDelay(valid > 0 ? delaySum / valid : null),
         `${countFormat.format(delay30)} · ${formatPct(pct(delay30, valid))}`,
         `${countFormat.format(delay60)} · ${formatPct(pct(delay60, valid))}`,
         `${countFormat.format(delay90)} · ${formatPct(pct(delay90, valid))}`,
@@ -180,9 +197,48 @@
     return values.map((counts) => pct(counts[seriesIndex], counts[1]));
   }
 
+  function averageDelayPoints(values) {
+    return values.map((counts) => counts[1] > 0 ? counts[5] / counts[1] : null);
+  }
+
   function niceCeiling(values) {
     const maximum = Math.max(0, ...values.filter((value) => value !== null));
     return Math.min(1, Math.max(0.1, Math.ceil(maximum * 20) / 20));
+  }
+
+  function niceStep(range, targetTicks = 5) {
+    const rough = Math.max(range, 1) / targetTicks;
+    const magnitude = 10 ** Math.floor(Math.log10(rough));
+    const residual = rough / magnitude;
+    const factor = residual <= 1 ? 1 : residual <= 2 ? 2 : residual <= 5 ? 5 : 10;
+    return factor * magnitude;
+  }
+
+  function delayDomain(values) {
+    const observed = values.filter((value) => value !== null);
+    if (!observed.length) {
+      return { min: 0, max: 10, step: 2 };
+    }
+
+    const rawMin = Math.min(0, ...observed);
+    const rawMax = Math.max(0, ...observed);
+    const rawRange = Math.max(rawMax - rawMin, 5);
+    const padding = Math.max(rawRange * 0.08, 1);
+    const paddedMin = rawMin < 0 ? rawMin - padding : 0;
+    const paddedMax = rawMax > 0 ? rawMax + padding : 0;
+    const step = niceStep(Math.max(paddedMax - paddedMin, 5));
+    const min = Math.floor(paddedMin / step) * step;
+    let max = Math.ceil(paddedMax / step) * step;
+    if (max <= min) {
+      max = min + step;
+    }
+    return { min, max, step };
+  }
+
+  function xTickIndexes(periods) {
+    return state.grain === "monthly"
+      ? periods.map((_, index) => index)
+      : [0, 4, 8, 12, 16, 20, periods.length - 1];
   }
 
   function linePath(points, xScale, yScale) {
@@ -296,10 +352,7 @@
       appendText(svg, `${Math.round(value * 100)}%`, margin.left - 10, y + 4, "axis-label", "end");
     }
 
-    const xTickIndexes = state.grain === "monthly"
-      ? periods.map((_, index) => index)
-      : [0, 4, 8, 12, 16, 20, periods.length - 1];
-    Array.from(new Set(xTickIndexes)).forEach((index) => {
+    Array.from(new Set(xTickIndexes(periods))).forEach((index) => {
       const x = xScale(index);
       svg.appendChild(svgElement("line", {
         x1: x,
@@ -350,6 +403,106 @@
     });
   }
 
+  function renderAverageChart(kind, packed, domain) {
+    const { periods, values, noun } = periodRows(packed);
+    const direction = kind === "arrival" ? "arrival" : "departure";
+    const title = `Average ${direction} delay by ${noun}`;
+    setText(`${kind}-average-chart-title`, title);
+    setText(
+      `${kind}-average-chart-subtitle`,
+      `Volume-weighted average across valid ${directionLabel(kind)}; positive is late and negative is early; ${periods.length} periods shown.`
+    );
+
+    const svg = document.getElementById(`${kind}-average-chart`);
+    svg.replaceChildren();
+    const titleNode = svgElement("title");
+    titleNode.textContent = title;
+    svg.appendChild(titleNode);
+
+    const descNode = svgElement("desc");
+    descNode.textContent = packed
+      ? `One line shows average ${direction} delay in minutes for ${periods.length} ${noun} periods. The scale includes zero; positive values are late and negative values are early.`
+      : "No movements are available for this filter.";
+    svg.appendChild(descNode);
+    setText(`${kind}-average-chart-desc`, descNode.textContent);
+
+    const width = 960;
+    const height = 340;
+    const margin = { top: 18, right: 58, bottom: 54, left: 58 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+    const averages = averageDelayPoints(values);
+
+    if (!packed || !averages.some((value) => value !== null)) {
+      appendText(svg, "No valid movements available for this filter", width / 2, height / 2, "no-data", "middle");
+      return;
+    }
+
+    const xScale = (index) => margin.left + (periods.length === 1 ? innerWidth / 2 : index * innerWidth / (periods.length - 1));
+    const yScale = (value) => margin.top + (domain.max - value) * innerHeight / (domain.max - domain.min);
+    const tickCount = Math.round((domain.max - domain.min) / domain.step);
+
+    for (let tick = 0; tick <= tickCount; tick += 1) {
+      const value = domain.min + domain.step * tick;
+      const y = yScale(value);
+      svg.appendChild(svgElement("line", {
+        x1: margin.left,
+        x2: width - margin.right,
+        y1: y,
+        y2: y,
+        class: Math.abs(value) < 0.0001 ? "zero-line" : "grid-line",
+      }));
+      appendText(svg, formatAxisMinutes(value), margin.left - 10, y + 4, "axis-label", "end");
+    }
+
+    Array.from(new Set(xTickIndexes(periods))).forEach((index) => {
+      const x = xScale(index);
+      svg.appendChild(svgElement("line", {
+        x1: x,
+        x2: x,
+        y1: margin.top + innerHeight,
+        y2: margin.top + innerHeight + 5,
+        class: "axis-line",
+      }));
+      const label = state.grain === "monthly" ? periods[index].l : shortDate(periods[index].s);
+      appendText(svg, label, x, margin.top + innerHeight + 24, "axis-label", "middle");
+    });
+
+    appendText(svg, "Average delay (minutes)", 14, margin.top + innerHeight / 2, "axis-label", "middle")
+      .setAttribute("transform", `rotate(-90 14 ${margin.top + innerHeight / 2})`);
+
+    const definition = {
+      marker: "circle",
+      className: "series-average",
+    };
+    svg.appendChild(svgElement("path", {
+      d: linePath(averages, xScale, yScale),
+      class: "series-line series-average",
+    }));
+
+    averages.forEach((value, index) => {
+      if (value === null) {
+        return;
+      }
+      const marker = markerNode(definition, xScale(index), yScale(value));
+      const valid = values[index][1];
+      const accessible = `${periods[index].l}, average ${direction} delay: ${formatDelay(value)}, across ${countFormat.format(valid)} valid ${directionLabel(kind)}.`;
+      marker.setAttribute("aria-label", accessible);
+      const markerTitle = svgElement("title");
+      markerTitle.textContent = accessible;
+      marker.appendChild(markerTitle);
+      marker.addEventListener("pointerenter", (event) => {
+        showTooltip(
+          `${kind}-average`,
+          event,
+          `<strong>${periods[index].l}</strong><br>${formatDelay(value)} average delay<br>${countFormat.format(valid)} valid ${directionLabel(kind)}`
+        );
+      });
+      marker.addEventListener("pointerleave", () => hideTooltip(`${kind}-average`));
+      svg.appendChild(marker);
+    });
+  }
+
   function render() {
     const key = scopeKey();
     const arrival = data.a[key];
@@ -362,13 +515,20 @@
       `${locationLabel} · ${airlineLabel} · ${periodLabel} trend · Feb 1–Jul 20, 2026`
     );
 
+    const averageDomain = delayDomain([
+      ...averageDelayPoints(periodRows(arrival).values),
+      ...averageDelayPoints(periodRows(departure).values),
+    ]);
+
     renderMetrics("arrival", arrival);
     renderTable("arrival", arrival);
     renderChart("arrival", arrival);
+    renderAverageChart("arrival", arrival, averageDomain);
 
     renderMetrics("departure", departure);
     renderTable("departure", departure);
     renderChart("departure", departure);
+    renderAverageChart("departure", departure, averageDomain);
     window.requestAnimationFrame(reportHeight);
   }
 
