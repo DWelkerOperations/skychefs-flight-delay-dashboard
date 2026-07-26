@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="description" content="Interactive SkyChefs arrival and departure delay dashboard.">
   <title>SkyChefs Airlines On Time Performance Dashboard</title>
-  <link rel="stylesheet" href="assets/dashboard.css?v=5">
+  <link rel="stylesheet" href="assets/dashboard.css?v=6">
 </head>
 <body>
   <main class="dashboard-shell">
@@ -265,6 +265,7 @@
           <label for="hourly-period-mode">Date selection</label>
           <select id="hourly-period-mode" name="hourly-period-mode">
             <option value="month">Monthly average</option>
+            <option value="week">Weekly average</option>
             <option value="day">Single day</option>
             <option value="range">Date range</option>
           </select>
@@ -273,6 +274,11 @@
         <div class="control-field hourly-period-input" id="hourly-month-control">
           <label for="hourly-month">Month</label>
           <select id="hourly-month" name="hourly-month"></select>
+        </div>
+
+        <div class="control-field hourly-period-input" id="hourly-week-control" hidden>
+          <label for="hourly-week">Week</label>
+          <select id="hourly-week" name="hourly-week"></select>
         </div>
 
         <div class="control-field hourly-period-input" id="hourly-day-control" hidden>
@@ -356,9 +362,9 @@
     </section>
   </main>
 
-  <script src="assets/dashboard-data.js?v=5"></script>
-  <script src="assets/dashboard-app.js?v=5"></script>
-  <script src="assets/hourly-app.js?v=5"></script>
-  <script src="assets/view-app.js?v=5"></script>
+  <script src="assets/dashboard-data.js?v=6"></script>
+  <script src="assets/dashboard-app.js?v=6"></script>
+  <script src="assets/hourly-app.js?v=6"></script>
+  <script src="assets/view-app.js?v=6"></script>
 </body>
 </html>

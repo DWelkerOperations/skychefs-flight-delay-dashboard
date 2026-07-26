@@ -38,6 +38,7 @@
   const airlineSelect = document.getElementById("airline-filter");
   const periodSelect = document.getElementById("hourly-period-mode");
   const monthSelect = document.getElementById("hourly-month");
+  const weekSelect = document.getElementById("hourly-week");
   const dayInput = document.getElementById("hourly-day");
   const rangeStartInput = document.getElementById("hourly-range-start");
   const rangeEndInput = document.getElementById("hourly-range-end");
@@ -53,6 +54,16 @@
     ? "2026-06"
     : data.months[0].s.slice(0, 7);
 
+  data.weeks.forEach((period) => {
+    const option = document.createElement("option");
+    option.value = period.s;
+    option.textContent = `${period.l}, 2026${period.p ? " (partial)" : ""}`;
+    weekSelect.appendChild(option);
+  });
+  const defaultWeek = [...data.weeks].reverse().find((period) => !period.p)
+    || data.weeks[data.weeks.length - 1];
+  weekSelect.value = defaultWeek.s;
+
   function periodMode() {
     return periodSelect.value;
   }
@@ -60,6 +71,7 @@
   function syncPeriodControls() {
     const mode = periodMode();
     document.getElementById("hourly-month-control").hidden = mode !== "month";
+    document.getElementById("hourly-week-control").hidden = mode !== "week";
     document.getElementById("hourly-day-control").hidden = mode !== "day";
     document.getElementById("hourly-range-control").hidden = mode !== "range";
   }
@@ -75,6 +87,15 @@
         start: dayInput.value,
         end: dayInput.value,
         label: displayDate.format(dateFromIso(dayInput.value)),
+        mode,
+      };
+    }
+    if (mode === "week") {
+      const week = data.weeks.find((period) => period.s === weekSelect.value);
+      return {
+        start: week.s,
+        end: week.e,
+        label: `${week.l}, 2026${week.p ? " (partial)" : ""}`,
         mode,
       };
     }
@@ -478,6 +499,7 @@
 
   periodSelect.addEventListener("change", renderHourly);
   monthSelect.addEventListener("change", renderHourly);
+  weekSelect.addEventListener("change", renderHourly);
   dayInput.addEventListener("change", renderHourly);
   rangeStartInput.addEventListener("change", renderHourly);
   rangeEndInput.addEventListener("change", renderHourly);
