@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="description" content="Interactive SkyChefs arrival and departure delay dashboard.">
   <title>SkyChefs Airlines On Time Performance Dashboard</title>
-  <link rel="stylesheet" href="assets/dashboard.css">
+  <link rel="stylesheet" href="assets/dashboard.css?v=4">
 </head>
 <body>
   <main class="dashboard-shell">
@@ -19,25 +19,245 @@
         <label for="airline-filter">Airline</label>
         <select id="airline-filter" name="airline"></select>
       </div>
-      <fieldset class="grain-control">
-        <legend>Time view</legend>
-        <div class="segmented-control">
-          <input type="radio" id="grain-monthly" name="grain" value="monthly" checked>
-          <label for="grain-monthly">Monthly</label>
-          <input type="radio" id="grain-weekly" name="grain" value="weekly">
-          <label for="grain-weekly">Weekly</label>
-        </div>
-      </fieldset>
-      <p id="scope-summary" class="scope-summary" aria-live="polite"></p>
+      <p class="filter-note">Location and airline apply to both analysis views.</p>
     </section>
 
-    <section class="hourly-section" aria-labelledby="hourly-heading">
-      <header class="section-heading">
+    <nav class="analysis-view-tabs" role="tablist" aria-label="Analysis view">
+      <button
+        id="view-trends-tab"
+        class="analysis-view-tab"
+        type="button"
+        role="tab"
+        aria-selected="true"
+        aria-controls="view-trends-panel">
+        <strong>Delay trends</strong>
+        <span>30, 60, and 90-minute rates over time</span>
+      </button>
+      <button
+        id="view-hourly-tab"
+        class="analysis-view-tab"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        aria-controls="view-hourly-panel"
+        tabindex="-1">
+        <strong>By scheduled hour</strong>
+        <span>On-time and delay patterns across the day</span>
+      </button>
+    </nav>
+
+    <section
+      id="view-trends-panel"
+      class="view-panel"
+      role="tabpanel"
+      aria-labelledby="view-trends-tab"
+      tabindex="0">
+      <header class="panel-heading">
+        <div>
+          <p class="eyebrow">Trend analysis</p>
+          <h1>Delay trends</h1>
+          <p>Track the share of valid movements delayed by 30, 60, and 90 minutes.</p>
+        </div>
+        <div class="trend-controls">
+          <fieldset class="grain-control trend-interval-control">
+            <legend>Trend interval</legend>
+            <div class="segmented-control">
+              <input type="radio" id="grain-monthly" name="grain" value="monthly" checked>
+              <label for="grain-monthly">Monthly</label>
+              <input type="radio" id="grain-weekly" name="grain" value="weekly">
+              <label for="grain-weekly">Weekly</label>
+            </div>
+          </fieldset>
+          <p id="scope-summary" class="scope-summary" aria-live="polite"></p>
+        </div>
+      </header>
+
+      <section class="direction-section" aria-labelledby="arrivals-heading">
+        <header class="direction-heading">
+          <div>
+            <p class="eyebrow">Inbound routing</p>
+            <h2 id="arrivals-heading">Arrivals</h2>
+            <p>Actual block time minus scheduled arrival time.</p>
+          </div>
+          <div class="direction-summary" aria-label="Arrival volume and coverage">
+            <span>
+              <small>Valid arrivals</small>
+              <strong id="arrival-valid">—</strong>
+              <em id="arrival-valid-context">—</em>
+            </span>
+            <span>
+              <small>Data coverage</small>
+              <strong id="arrival-coverage">—</strong>
+              <em>Valid ÷ scheduled</em>
+            </span>
+          </div>
+        </header>
+
+        <section class="trend-block" aria-labelledby="arrival-chart-title">
+          <div class="trend-heading">
+            <div>
+              <h2 id="arrival-chart-title">Arrival delay rates by month</h2>
+              <p id="arrival-chart-subtitle">Share of valid arrivals at each inclusive delay threshold.</p>
+            </div>
+            <div class="series-legend" aria-label="Delay threshold legend">
+              <span><i class="legend-line legend-30" aria-hidden="true"></i>30+ min</span>
+              <span><i class="legend-line legend-60" aria-hidden="true"></i>60+ min</span>
+              <span><i class="legend-line legend-90" aria-hidden="true"></i>90+ min</span>
+            </div>
+          </div>
+          <div class="chart-wrap" id="arrival-chart-wrap">
+            <svg id="arrival-chart" class="trend-chart" viewBox="0 0 960 340" role="img" aria-labelledby="arrival-chart-title arrival-chart-desc"></svg>
+            <p id="arrival-chart-desc" class="sr-only"></p>
+            <div id="arrival-tooltip" class="chart-tooltip" hidden></div>
+          </div>
+        </section>
+
+        <div class="metric-grid threshold-grid" id="arrival-metrics">
+          <article class="metric-card">
+            <p>30+ min delayed</p>
+            <strong id="arrival-30">—</strong>
+            <span id="arrival-30-context">—</span>
+          </article>
+          <article class="metric-card">
+            <p>60+ min delayed</p>
+            <strong id="arrival-60">—</strong>
+            <span id="arrival-60-context">—</span>
+          </article>
+          <article class="metric-card">
+            <p>90+ min delayed</p>
+            <strong id="arrival-90">—</strong>
+            <span id="arrival-90-context">—</span>
+          </article>
+        </div>
+
+        <details class="table-disclosure">
+          <summary>View arrival table</summary>
+          <section class="table-block" aria-labelledby="arrival-table-title">
+            <div class="table-heading">
+              <h2 id="arrival-table-title">Arrival metrics by month</h2>
+              <p>Delay-rate cells show delayed count and percent of valid movements.</p>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <caption>Arrival delay metrics by period</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Period</th>
+                    <th scope="col">Scheduled</th>
+                    <th scope="col">Valid</th>
+                    <th scope="col">Coverage</th>
+                    <th scope="col">30+ min</th>
+                    <th scope="col">60+ min</th>
+                    <th scope="col">90+ min</th>
+                  </tr>
+                </thead>
+                <tbody id="arrival-table-body"></tbody>
+              </table>
+            </div>
+          </section>
+        </details>
+      </section>
+
+      <section class="direction-section" aria-labelledby="departures-heading">
+        <header class="direction-heading">
+          <div>
+            <p class="eyebrow">Outbound routing</p>
+            <h2 id="departures-heading">Departures</h2>
+            <p>Actual block time minus scheduled departure time.</p>
+          </div>
+          <div class="direction-summary" aria-label="Departure volume and coverage">
+            <span>
+              <small>Valid departures</small>
+              <strong id="departure-valid">—</strong>
+              <em id="departure-valid-context">—</em>
+            </span>
+            <span>
+              <small>Data coverage</small>
+              <strong id="departure-coverage">—</strong>
+              <em>Valid ÷ scheduled</em>
+            </span>
+          </div>
+        </header>
+
+        <section class="trend-block" aria-labelledby="departure-chart-title">
+          <div class="trend-heading">
+            <div>
+              <h2 id="departure-chart-title">Departure delay rates by month</h2>
+              <p id="departure-chart-subtitle">Share of valid departures at each inclusive delay threshold.</p>
+            </div>
+            <div class="series-legend" aria-label="Delay threshold legend">
+              <span><i class="legend-line legend-30" aria-hidden="true"></i>30+ min</span>
+              <span><i class="legend-line legend-60" aria-hidden="true"></i>60+ min</span>
+              <span><i class="legend-line legend-90" aria-hidden="true"></i>90+ min</span>
+            </div>
+          </div>
+          <div class="chart-wrap" id="departure-chart-wrap">
+            <svg id="departure-chart" class="trend-chart" viewBox="0 0 960 340" role="img" aria-labelledby="departure-chart-title departure-chart-desc"></svg>
+            <p id="departure-chart-desc" class="sr-only"></p>
+            <div id="departure-tooltip" class="chart-tooltip" hidden></div>
+          </div>
+        </section>
+
+        <div class="metric-grid threshold-grid" id="departure-metrics">
+          <article class="metric-card">
+            <p>30+ min delayed</p>
+            <strong id="departure-30">—</strong>
+            <span id="departure-30-context">—</span>
+          </article>
+          <article class="metric-card">
+            <p>60+ min delayed</p>
+            <strong id="departure-60">—</strong>
+            <span id="departure-60-context">—</span>
+          </article>
+          <article class="metric-card">
+            <p>90+ min delayed</p>
+            <strong id="departure-90">—</strong>
+            <span id="departure-90-context">—</span>
+          </article>
+        </div>
+
+        <details class="table-disclosure">
+          <summary>View departure table</summary>
+          <section class="table-block" aria-labelledby="departure-table-title">
+            <div class="table-heading">
+              <h2 id="departure-table-title">Departure metrics by month</h2>
+              <p>Delay-rate cells show delayed count and percent of valid movements.</p>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <caption>Departure delay metrics by period</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Period</th>
+                    <th scope="col">Scheduled</th>
+                    <th scope="col">Valid</th>
+                    <th scope="col">Coverage</th>
+                    <th scope="col">30+ min</th>
+                    <th scope="col">60+ min</th>
+                    <th scope="col">90+ min</th>
+                  </tr>
+                </thead>
+                <tbody id="departure-table-body"></tbody>
+              </table>
+            </div>
+          </section>
+        </details>
+      </section>
+    </section>
+
+    <section
+      id="view-hourly-panel"
+      class="view-panel hourly-section"
+      role="tabpanel"
+      aria-labelledby="view-hourly-tab"
+      tabindex="0"
+      hidden>
+      <header class="panel-heading">
         <div>
           <p class="eyebrow">Scheduled-time analysis</p>
-          <h1 id="hourly-heading">Hourly performance</h1>
+          <h1 id="hourly-heading">Performance by scheduled hour</h1>
+          <p>Compare arrival and departure results across the operating day.</p>
         </div>
-        <p>Compare arrival and departure results by scheduled local hour.</p>
       </header>
 
       <section class="hourly-control-bar" aria-label="Hourly performance controls">
@@ -51,17 +271,14 @@
           </select>
         </div>
 
-        <fieldset class="grain-control hourly-period-control">
-          <legend>Period</legend>
-          <div class="segmented-control segmented-control-three">
-            <input type="radio" id="hourly-period-month" name="hourly-period" value="month" checked>
-            <label for="hourly-period-month">Monthly average</label>
-            <input type="radio" id="hourly-period-day" name="hourly-period" value="day">
-            <label for="hourly-period-day">Single day</label>
-            <input type="radio" id="hourly-period-range" name="hourly-period" value="range">
-            <label for="hourly-period-range">Date range</label>
-          </div>
-        </fieldset>
+        <div class="control-field">
+          <label for="hourly-period-mode">Date selection</label>
+          <select id="hourly-period-mode" name="hourly-period-mode">
+            <option value="month">Monthly average</option>
+            <option value="day">Single day</option>
+            <option value="range">Date range</option>
+          </select>
+        </div>
 
         <div class="control-field hourly-period-input" id="hourly-month-control">
           <label for="hourly-month">Month</label>
@@ -105,191 +322,32 @@
         </div>
       </section>
 
-      <section class="table-block" aria-labelledby="hourly-table-title">
-        <div class="table-heading">
-          <h2 id="hourly-table-title">Hourly detail</h2>
-          <p>Rates use valid movements; counts show the matching numerator and denominator.</p>
-        </div>
-        <div class="table-scroll">
-          <table>
-            <caption>Arrival and departure performance by scheduled hour</caption>
-            <thead>
-              <tr>
-                <th scope="col">Scheduled hour</th>
-                <th scope="col" id="hourly-arrival-rate-heading">Arrival on time</th>
-                <th scope="col">Valid arrivals</th>
-                <th scope="col">Arrival coverage</th>
-                <th scope="col" id="hourly-departure-rate-heading">Departure on time</th>
-                <th scope="col">Valid departures</th>
-                <th scope="col">Departure coverage</th>
-              </tr>
-            </thead>
-            <tbody id="hourly-table-body"></tbody>
-          </table>
-        </div>
-      </section>
-    </section>
-
-    <section class="direction-section" aria-labelledby="arrivals-heading">
-      <header class="section-heading">
-        <div>
-          <p class="eyebrow">Inbound routing</p>
-          <h1 id="arrivals-heading">Arrivals</h1>
-        </div>
-        <p>Delay is actual block time minus scheduled arrival time.</p>
-      </header>
-
-      <div class="metric-grid" id="arrival-metrics">
-        <article class="metric-card">
-          <p>Valid arrivals</p>
-          <strong id="arrival-valid">—</strong>
-          <span id="arrival-valid-context">—</span>
-        </article>
-        <article class="metric-card">
-          <p>Data coverage</p>
-          <strong id="arrival-coverage">—</strong>
-          <span>Valid ÷ scheduled</span>
-        </article>
-        <article class="metric-card">
-          <p>30+ min delayed</p>
-          <strong id="arrival-30">—</strong>
-          <span id="arrival-30-context">—</span>
-        </article>
-        <article class="metric-card">
-          <p>60+ min delayed</p>
-          <strong id="arrival-60">—</strong>
-          <span id="arrival-60-context">—</span>
-        </article>
-        <article class="metric-card">
-          <p>90+ min delayed</p>
-          <strong id="arrival-90">—</strong>
-          <span id="arrival-90-context">—</span>
-        </article>
-      </div>
-
-      <section class="trend-block" aria-labelledby="arrival-chart-title">
-        <div class="trend-heading">
-          <div>
-            <h2 id="arrival-chart-title">Arrival delay rates by month</h2>
-            <p id="arrival-chart-subtitle">Share of valid arrivals at each inclusive delay threshold.</p>
+      <details class="table-disclosure">
+        <summary>View hourly table</summary>
+        <section class="table-block" aria-labelledby="hourly-table-title">
+          <div class="table-heading">
+            <h2 id="hourly-table-title">Hourly detail</h2>
+            <p>Rates use valid movements; counts show the matching numerator and denominator.</p>
           </div>
-          <div class="series-legend" aria-label="Delay threshold legend">
-            <span><i class="legend-line legend-30" aria-hidden="true"></i>30+ min</span>
-            <span><i class="legend-line legend-60" aria-hidden="true"></i>60+ min</span>
-            <span><i class="legend-line legend-90" aria-hidden="true"></i>90+ min</span>
+          <div class="table-scroll">
+            <table>
+              <caption>Arrival and departure performance by scheduled hour</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Scheduled hour</th>
+                  <th scope="col" id="hourly-arrival-rate-heading">Arrival on time</th>
+                  <th scope="col">Valid arrivals</th>
+                  <th scope="col">Arrival coverage</th>
+                  <th scope="col" id="hourly-departure-rate-heading">Departure on time</th>
+                  <th scope="col">Valid departures</th>
+                  <th scope="col">Departure coverage</th>
+                </tr>
+              </thead>
+              <tbody id="hourly-table-body"></tbody>
+            </table>
           </div>
-        </div>
-        <div class="chart-wrap" id="arrival-chart-wrap">
-          <svg id="arrival-chart" class="trend-chart" viewBox="0 0 960 340" role="img" aria-labelledby="arrival-chart-title arrival-chart-desc"></svg>
-          <p id="arrival-chart-desc" class="sr-only"></p>
-          <div id="arrival-tooltip" class="chart-tooltip" hidden></div>
-        </div>
-      </section>
-
-      <section class="table-block" aria-labelledby="arrival-table-title">
-        <div class="table-heading">
-          <h2 id="arrival-table-title">Arrival metrics by month</h2>
-          <p>Delay-rate cells show delayed count and percent of valid movements.</p>
-        </div>
-        <div class="table-scroll">
-          <table>
-            <caption>Arrival delay metrics by period</caption>
-            <thead>
-              <tr>
-                <th scope="col">Period</th>
-                <th scope="col">Scheduled</th>
-                <th scope="col">Valid</th>
-                <th scope="col">Coverage</th>
-                <th scope="col">30+ min</th>
-                <th scope="col">60+ min</th>
-                <th scope="col">90+ min</th>
-              </tr>
-            </thead>
-            <tbody id="arrival-table-body"></tbody>
-          </table>
-        </div>
-      </section>
-    </section>
-
-    <section class="direction-section" aria-labelledby="departures-heading">
-      <header class="section-heading">
-        <div>
-          <p class="eyebrow">Outbound routing</p>
-          <h1 id="departures-heading">Departures</h1>
-        </div>
-        <p>Delay is actual block time minus scheduled departure time.</p>
-      </header>
-
-      <div class="metric-grid" id="departure-metrics">
-        <article class="metric-card">
-          <p>Valid departures</p>
-          <strong id="departure-valid">—</strong>
-          <span id="departure-valid-context">—</span>
-        </article>
-        <article class="metric-card">
-          <p>Data coverage</p>
-          <strong id="departure-coverage">—</strong>
-          <span>Valid ÷ scheduled</span>
-        </article>
-        <article class="metric-card">
-          <p>30+ min delayed</p>
-          <strong id="departure-30">—</strong>
-          <span id="departure-30-context">—</span>
-        </article>
-        <article class="metric-card">
-          <p>60+ min delayed</p>
-          <strong id="departure-60">—</strong>
-          <span id="departure-60-context">—</span>
-        </article>
-        <article class="metric-card">
-          <p>90+ min delayed</p>
-          <strong id="departure-90">—</strong>
-          <span id="departure-90-context">—</span>
-        </article>
-      </div>
-
-      <section class="trend-block" aria-labelledby="departure-chart-title">
-        <div class="trend-heading">
-          <div>
-            <h2 id="departure-chart-title">Departure delay rates by month</h2>
-            <p id="departure-chart-subtitle">Share of valid departures at each inclusive delay threshold.</p>
-          </div>
-          <div class="series-legend" aria-label="Delay threshold legend">
-            <span><i class="legend-line legend-30" aria-hidden="true"></i>30+ min</span>
-            <span><i class="legend-line legend-60" aria-hidden="true"></i>60+ min</span>
-            <span><i class="legend-line legend-90" aria-hidden="true"></i>90+ min</span>
-          </div>
-        </div>
-        <div class="chart-wrap" id="departure-chart-wrap">
-          <svg id="departure-chart" class="trend-chart" viewBox="0 0 960 340" role="img" aria-labelledby="departure-chart-title departure-chart-desc"></svg>
-          <p id="departure-chart-desc" class="sr-only"></p>
-          <div id="departure-tooltip" class="chart-tooltip" hidden></div>
-        </div>
-      </section>
-
-      <section class="table-block" aria-labelledby="departure-table-title">
-        <div class="table-heading">
-          <h2 id="departure-table-title">Departure metrics by month</h2>
-          <p>Delay-rate cells show delayed count and percent of valid movements.</p>
-        </div>
-        <div class="table-scroll">
-          <table>
-            <caption>Departure delay metrics by period</caption>
-            <thead>
-              <tr>
-                <th scope="col">Period</th>
-                <th scope="col">Scheduled</th>
-                <th scope="col">Valid</th>
-                <th scope="col">Coverage</th>
-                <th scope="col">30+ min</th>
-                <th scope="col">60+ min</th>
-                <th scope="col">90+ min</th>
-              </tr>
-            </thead>
-            <tbody id="departure-table-body"></tbody>
-          </table>
-        </div>
-      </section>
+        </section>
+      </details>
     </section>
 
     <section class="methodology" aria-labelledby="methodology-heading">
@@ -308,8 +366,9 @@
     </section>
   </main>
 
-  <script src="assets/dashboard-data.js"></script>
-  <script src="assets/dashboard-app.js"></script>
-  <script src="assets/hourly-app.js"></script>
+  <script src="assets/dashboard-data.js?v=4"></script>
+  <script src="assets/dashboard-app.js?v=4"></script>
+  <script src="assets/hourly-app.js?v=4"></script>
+  <script src="assets/view-app.js?v=4"></script>
 </body>
 </html>

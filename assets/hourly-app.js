@@ -63,7 +63,7 @@
   const locationSelect = document.getElementById("location-filter");
   const airlineSelect = document.getElementById("airline-filter");
   const metricSelect = document.getElementById("hourly-metric");
-  const periodInputs = Array.from(document.querySelectorAll('input[name="hourly-period"]'));
+  const periodSelect = document.getElementById("hourly-period-mode");
   const monthSelect = document.getElementById("hourly-month");
   const dayInput = document.getElementById("hourly-day");
   const rangeStartInput = document.getElementById("hourly-range-start");
@@ -81,7 +81,7 @@
     : data.months[0].s.slice(0, 7);
 
   function periodMode() {
-    return periodInputs.find((input) => input.checked)?.value || "month";
+    return periodSelect.value;
   }
 
   function syncPeriodControls() {
@@ -462,7 +462,7 @@
   }
 
   metricSelect.addEventListener("change", renderHourly);
-  periodInputs.forEach((input) => input.addEventListener("change", renderHourly));
+  periodSelect.addEventListener("change", renderHourly);
   monthSelect.addEventListener("change", renderHourly);
   dayInput.addEventListener("change", renderHourly);
   rangeStartInput.addEventListener("change", renderHourly);
