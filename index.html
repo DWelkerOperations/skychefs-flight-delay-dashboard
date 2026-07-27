@@ -160,14 +160,14 @@
         <h1>Airlines On Time Performance</h1>
         <p class="subtitle">Arrival and departure delay metrics by location and marketed airline</p>
       </div>
-      <div class="snapshot-badge">Data through Jul 20, 2026</div>
+      <div class="snapshot-badge" id="snapshot-badge" aria-live="polite">Loading data coverage…</div>
     </div>
   </header>
 
   <main id="dashboard">
     <iframe
       class="dashboard-frame"
-      src="dashboard.html?v=8"
+      src="dashboard.html?v=9"
       title="SkyChefs Airlines On Time Performance dashboard"
       loading="eager">
     </iframe>
@@ -179,9 +179,27 @@
   <script>
     (() => {
       const frame = document.querySelector(".dashboard-frame");
+      const snapshotBadge = document.getElementById("snapshot-badge");
+      const coverageDateFormat = new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+
+      function renderCoverageEnd(isoDate) {
+        if (typeof isoDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) {
+          return;
+        }
+        const date = new Date(`${isoDate}T12:00:00`);
+        if (!Number.isNaN(date.getTime())) {
+          snapshotBadge.textContent = `Data through ${coverageDateFormat.format(date)}`;
+        }
+      }
+
       window.addEventListener("message", (event) => {
         const sameOrigin = location.protocol === "file:" || event.origin === location.origin;
         if (!sameOrigin || event.data?.type !== "skychefs-dashboard-height") return;
+        renderCoverageEnd(event.data.coverageEnd);
         const height = Number(event.data.height);
         if (Number.isFinite(height) && height >= 720 && height <= 12000) {
           frame.style.height = `${Math.ceil(height)}px`;

@@ -15,6 +15,8 @@
   });
   const minimumChartObservations = 10;
   const loadedMonths = new Map();
+  const assetVersion = String(window.SKY_CHEFS_ASSET_VERSION || "").trim();
+  const assetVersionQuery = assetVersion ? `?v=${encodeURIComponent(assetVersion)}` : "";
   let renderVersion = 0;
 
   const directionDefinitions = [
@@ -43,6 +45,15 @@
   const rangeStartInput = document.getElementById("hourly-range-start");
   const rangeEndInput = document.getElementById("hourly-range-end");
   const status = document.getElementById("hourly-status");
+  const latestMonth = data.months[data.months.length - 1];
+
+  [dayInput, rangeStartInput, rangeEndInput].forEach((input) => {
+    input.min = data.start;
+    input.max = data.end;
+  });
+  dayInput.value = data.end;
+  rangeStartInput.value = latestMonth ? latestMonth.s : data.start;
+  rangeEndInput.value = data.end;
 
   data.months.forEach((period) => {
     const option = document.createElement("option");
@@ -149,7 +160,7 @@
 
     const promise = new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = `assets/hourly-data-${month}.js`;
+      script.src = `assets/hourly-data-${month}.js${assetVersionQuery}`;
       script.onload = () => resolve(window.SKY_CHEFS_HOURLY_DATA[month]);
       script.onerror = () => reject(new Error(`Hourly data for ${month} could not be loaded.`));
       document.head.appendChild(script);

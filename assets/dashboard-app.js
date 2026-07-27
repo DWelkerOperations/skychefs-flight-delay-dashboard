@@ -15,6 +15,24 @@
 
   const countFormat = new Intl.NumberFormat("en-US");
   const dateFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+  const shortCoverageDateFormat = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  const shortCoverageStartFormat = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+  const longCoverageDateFormat = new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  const longCoverageStartFormat = new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+  });
   const svgNS = "http://www.w3.org/2000/svg";
   const series = [
     { index: 2, threshold: 30, label: "30+ min", className: "series-30", marker: "circle" },
@@ -92,6 +110,44 @@
 
   function directionLabel(kind) {
     return kind === "arrival" ? "arrivals" : "departures";
+  }
+
+  function dateFromIso(isoDate) {
+    return new Date(`${isoDate}T12:00:00`);
+  }
+
+  function coverageRange(start, end, longForm = false, separator = "–") {
+    const startDate = dateFromIso(start);
+    const endDate = dateFromIso(end);
+    const sameYear = startDate.getFullYear() === endDate.getFullYear();
+    const startFormatter = longForm ? longCoverageStartFormat : shortCoverageStartFormat;
+    const endFormatter = longForm ? longCoverageDateFormat : shortCoverageDateFormat;
+    const startLabel = sameYear ? startFormatter.format(startDate) : endFormatter.format(startDate);
+    return `${startLabel}${separator}${endFormatter.format(endDate)}`;
+  }
+
+  function partialPeriodLabel(period) {
+    if (!period) {
+      return "";
+    }
+    return `${period.l}, ${dateFromIso(period.e).getFullYear()}`;
+  }
+
+  function renderSnapshotContext() {
+    setText(
+      "snapshot-coverage-note",
+      `This static snapshot covers scheduled movements from ${coverageRange(data.start, data.end, true, " through ")}.`
+    );
+    const partialWeek = data.weeks.find((period) => period.p);
+    const partialMonth = data.months.find((period) => period.p);
+    const notes = ["Weekly periods are Sunday–Saturday."];
+    if (partialWeek) {
+      notes.push(`${partialPeriodLabel(partialWeek)} is a partial week.`);
+    }
+    if (partialMonth) {
+      notes.push(`${partialPeriodLabel(partialMonth)} is also a partial month.`);
+    }
+    setText("snapshot-period-note", notes.join(" "));
   }
 
   function renderMetrics(kind, packed) {
@@ -519,7 +575,7 @@
     const periodLabel = state.grain === "monthly" ? "Monthly" : "Weekly";
     setText(
       "scope-summary",
-      `${locationLabel} · ${airlineLabel} · ${periodLabel} trend · Feb 1–Jul 20, 2026`
+      `${locationLabel} · ${airlineLabel} · ${periodLabel} trend · ${coverageRange(data.start, data.end)}`
     );
 
     const averageDomain = delayDomain([
@@ -544,6 +600,9 @@
       {
         type: "skychefs-dashboard-height",
         height: document.documentElement.scrollHeight,
+        coverageStart: data.start,
+        coverageEnd: data.end,
+        generatedAt: data.generatedAt,
       },
       "*"
     );
@@ -553,5 +612,6 @@
     new ResizeObserver(reportHeight).observe(document.body);
   }
   window.addEventListener("load", reportHeight);
+  renderSnapshotContext();
   render();
 })();
