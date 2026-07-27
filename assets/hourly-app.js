@@ -192,7 +192,7 @@
 
   function validateSelection(selection) {
     if (!selection.start || !selection.end) {
-      return "Choose a valid date or date range.";
+      return "Choose a date or date range.";
     }
     if (selection.start < data.start || selection.end > data.end) {
       return `Choose dates from ${data.start} through ${data.end}.`;
@@ -405,7 +405,7 @@
     const tooltip = document.getElementById("hourly-tooltip");
     const wrapRect = wrap.getBoundingClientRect();
     const markRect = event.currentTarget.getBoundingClientRect();
-    tooltip.innerHTML = `<strong>${hourLabel(hour)} · ${definition.label}</strong><br>${formatDelay(value)} average delay<br>${countFormat.format(valid)} valid movements`;
+    tooltip.innerHTML = `<strong>${hourLabel(hour)} · ${definition.label}</strong><br>${formatDelay(value)} average delay<br>${countFormat.format(valid)} movements`;
     tooltip.hidden = false;
     const x = markRect.left - wrapRect.left + markRect.width / 2;
     const y = markRect.top - wrapRect.top;
@@ -438,7 +438,7 @@
     const title = "Monthly Arrival Delay Comparison";
     const scopeLocation = locationSelect.value === "all" ? "all locations" : locationSelect.value;
     const scopeAirline = airlineSelect.value === "all" ? "all airlines" : airlineSelect.value;
-    const subtitle = `${scopeLocation} · ${scopeAirline} · arrivals only · positive is late; negative is early · lines require 10+ valid arrivals per hour.`;
+    const subtitle = `${scopeLocation} · ${scopeAirline} · arrivals only · positive is late; negative is early · lines require 10+ arrivals per hour.`;
     document.getElementById("arrival-comparison-chart-title").textContent = title;
     document.getElementById("arrival-comparison-chart-subtitle").textContent = subtitle;
 
@@ -451,7 +451,7 @@
     const selectedLabels = monthSeries.map((seriesDefinition) => comparisonMonthLabel(seriesDefinition.period));
     const descNode = svgElement("desc");
     descNode.textContent = monthSeries.length
-      ? `Average arrival delay in minutes across 24 scheduled local hours for ${selectedLabels.join(", ")}. Each selected month is a separate line. Positive values are late and negative values are early. Plotted points require at least 10 valid arrivals.`
+      ? `Average arrival delay in minutes across 24 scheduled local hours for ${selectedLabels.join(", ")}. Each selected month is a separate line. Positive values are late and negative values are early. Plotted points require at least 10 arrivals.`
       : "No months are selected. Select one or more months to compare average arrival delay by scheduled hour.";
     svg.appendChild(descNode);
     document.getElementById("arrival-comparison-chart-desc").textContent = descNode.textContent;
@@ -507,7 +507,7 @@
 
     const hasData = allAverages.some((value) => value !== null);
     if (!hasData) {
-      appendText(svg, "No valid arrivals for the selected months", width / 2, height / 2, "no-data", "middle");
+      appendText(svg, "No arrivals available for the selected months", width / 2, height / 2, "no-data", "middle");
       return;
     }
 
@@ -531,7 +531,7 @@
         const valid = seriesDefinition.hours[hour][1];
         const label = comparisonMonthLabel(seriesDefinition.period);
         const marker = markerNode(markerDefinition, xScale(hour), yScale(value));
-        const accessible = `${hourLabel(hour)}, ${label}, average arrival delay: ${formatDelay(value)}, ${countFormat.format(valid)} valid arrivals.`;
+        const accessible = `${hourLabel(hour)}, ${label}, average arrival delay: ${formatDelay(value)}, ${countFormat.format(valid)} arrivals.`;
         marker.setAttribute("aria-label", accessible);
         const markerTitle = svgElement("title");
         markerTitle.textContent = accessible;
@@ -539,7 +539,7 @@
         marker.addEventListener("pointerenter", (event) => {
           showComparisonTooltip(
             event,
-            `<strong>${hourLabel(hour)} · ${label}</strong><br>${formatDelay(value)} average arrival delay<br>${countFormat.format(valid)} valid arrivals`
+            `<strong>${hourLabel(hour)} · ${label}</strong><br>${formatDelay(value)} average arrival delay<br>${countFormat.format(valid)} arrivals`
           );
         });
         marker.addEventListener("pointerleave", hideComparisonTooltip);
@@ -552,7 +552,7 @@
     const title = "Average Delay by Scheduled Hour";
     const scopeLocation = locationSelect.value === "all" ? "all locations" : locationSelect.value;
     const scopeAirline = airlineSelect.value === "all" ? "all airlines" : airlineSelect.value;
-    const subtitle = `${selection.label} · ${scopeLocation} · ${scopeAirline} · positive is late; negative is early · lines require 10+ valid movements per hour.`;
+    const subtitle = `${selection.label} · ${scopeLocation} · ${scopeAirline} · positive is late; negative is early · lines require 10+ movements per hour.`;
     document.getElementById("hourly-chart-title").textContent = title;
     document.getElementById("hourly-chart-subtitle").textContent = subtitle;
 
@@ -562,7 +562,7 @@
     titleNode.textContent = title;
     svg.appendChild(titleNode);
     const descNode = svgElement("desc");
-    descNode.textContent = `Average arrival and departure delay in minutes across 24 scheduled local hours for ${selection.label}. Positive values are late and negative values are early. Plotted points require at least 10 valid movements; the table includes every hour.`;
+    descNode.textContent = `Average arrival and departure delay in minutes across 24 scheduled local hours for ${selection.label}. Positive values are late and negative values are early. Plotted points require at least 10 movements; the table includes every hour.`;
     svg.appendChild(descNode);
     document.getElementById("hourly-chart-desc").textContent = descNode.textContent;
 
@@ -612,7 +612,7 @@
 
     const hasData = allAverages.some((value) => value !== null);
     if (!hasData) {
-      appendText(svg, "No valid movements for this selection", width / 2, height / 2, "no-data", "middle");
+      appendText(svg, "No movements available for this selection", width / 2, height / 2, "no-data", "middle");
       return;
     }
 
@@ -631,7 +631,7 @@
         const counts = values[hour];
         const valid = counts[1];
         const marker = markerNode(definition, xScale(hour), yScale(value));
-        const accessible = `${hourLabel(hour)}, ${definition.label}, average delay: ${formatDelay(value)}, ${countFormat.format(valid)} valid movements.`;
+        const accessible = `${hourLabel(hour)}, ${definition.label}, average delay: ${formatDelay(value)}, ${countFormat.format(valid)} movements.`;
         marker.setAttribute("aria-label", accessible);
         const markerTitle = svgElement("title");
         markerTitle.textContent = accessible;
@@ -752,7 +752,7 @@
 
       const scopeLocation = locationSelect.value === "all" ? "All locations" : locationSelect.value;
       const scopeAirline = airlineSelect.value === "all" ? "All airlines" : airlineSelect.value;
-      status.textContent = `${selection.label} · ${scopeLocation} · ${scopeAirline} · ${countFormat.format(totalValid(arrivals))} valid arrivals · ${countFormat.format(totalValid(departures))} valid departures`;
+      status.textContent = `${selection.label} · ${scopeLocation} · ${scopeAirline} · ${countFormat.format(totalValid(arrivals))} analyzed arrivals · ${countFormat.format(totalValid(departures))} analyzed departures`;
     } catch (loadError) {
       if (version !== renderVersion) {
         return;

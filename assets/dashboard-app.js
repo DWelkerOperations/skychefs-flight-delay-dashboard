@@ -169,8 +169,8 @@
       const delayed = [delay30, delay60, delay90][index];
       document.getElementById(`${prefix}-${threshold}`).textContent = packed ? formatPct(pct(delayed, valid)) : "—";
       document.getElementById(`${prefix}-${threshold}-context`).textContent = packed
-        ? `${countFormat.format(delayed)} of ${countFormat.format(valid)} valid`
-        : "No valid denominator";
+        ? `${countFormat.format(delayed)} of ${countFormat.format(valid)} ${noun}`
+        : "No analyzed movements";
     });
   }
 
@@ -367,7 +367,7 @@
     setText(`${kind}-chart-title`, title);
     setText(
       `${kind}-chart-subtitle`,
-      `Share of valid ${directionLabel(kind)} at each inclusive delay threshold; ${periods.length} periods shown.`
+      `Share of ${directionLabel(kind)} at each inclusive delay threshold; ${periods.length} periods shown.`
     );
 
     const svg = document.getElementById(`${kind}-chart`);
@@ -426,7 +426,7 @@
       appendText(svg, label, x, margin.top + innerHeight + 24, "axis-label", "middle");
     });
 
-    appendText(svg, "Percent of valid movements", 14, margin.top + innerHeight / 2, "axis-label", "middle")
+    appendText(svg, "Percent of movements", 14, margin.top + innerHeight / 2, "axis-label", "middle")
       .setAttribute("transform", `rotate(-90 14 ${margin.top + innerHeight / 2})`);
 
     series.forEach((definition) => {
@@ -446,7 +446,7 @@
         const marker = markerNode(definition, x, y);
         const delayed = values[index][definition.index];
         const valid = values[index][1];
-        const accessible = `${periods[index].l}, ${definition.label}: ${formatPct(value)}, ${countFormat.format(delayed)} of ${countFormat.format(valid)} valid ${directionLabel(kind)}.`;
+        const accessible = `${periods[index].l}, ${definition.label}: ${formatPct(value)}, ${countFormat.format(delayed)} of ${countFormat.format(valid)} ${directionLabel(kind)}.`;
         marker.setAttribute("aria-label", accessible);
         const markerTitle = svgElement("title");
         markerTitle.textContent = accessible;
@@ -455,7 +455,7 @@
           showTooltip(
             kind,
             event,
-            `<strong>${periods[index].l}</strong><br>${definition.label}: ${formatPct(value)}<br>${countFormat.format(delayed)} of ${countFormat.format(valid)} valid`
+            `<strong>${periods[index].l}</strong><br>${definition.label}: ${formatPct(value)}<br>${countFormat.format(delayed)} of ${countFormat.format(valid)} ${directionLabel(kind)}`
           );
         });
         marker.addEventListener("pointerleave", () => hideTooltip(kind));
@@ -473,7 +473,7 @@
     setText(`${kind}-average-chart-title`, title);
     setText(
       `${kind}-average-chart-subtitle`,
-      `Volume-weighted average across valid ${directionLabel(kind)}; positive is late and negative is early; ${periods.length} periods shown.`
+      `Volume-weighted average across ${directionLabel(kind)}; positive is late and negative is early; ${periods.length} periods shown.`
     );
 
     const svg = document.getElementById(`${kind}-average-chart`);
@@ -497,7 +497,7 @@
     const averages = averageDelayPoints(values);
 
     if (!packed || !averages.some((value) => value !== null)) {
-      appendText(svg, "No valid movements available for this filter", width / 2, height / 2, "no-data", "middle");
+      appendText(svg, "No movements available for this filter", width / 2, height / 2, "no-data", "middle");
       return;
     }
 
@@ -549,7 +549,7 @@
       }
       const marker = markerNode(definition, xScale(index), yScale(value));
       const valid = values[index][1];
-      const accessible = `${periods[index].l}, average ${direction} delay: ${formatDelay(value)}, across ${countFormat.format(valid)} valid ${directionLabel(kind)}.`;
+      const accessible = `${periods[index].l}, average ${direction} delay: ${formatDelay(value)}, across ${countFormat.format(valid)} ${directionLabel(kind)}.`;
       marker.setAttribute("aria-label", accessible);
       const markerTitle = svgElement("title");
       markerTitle.textContent = accessible;
@@ -558,7 +558,7 @@
         showTooltip(
           `${kind}-average`,
           event,
-          `<strong>${periods[index].l}</strong><br>${formatDelay(value)} average delay<br>${countFormat.format(valid)} valid ${directionLabel(kind)}`
+          `<strong>${periods[index].l}</strong><br>${formatDelay(value)} average delay<br>${countFormat.format(valid)} ${directionLabel(kind)}`
         );
       });
       marker.addEventListener("pointerleave", () => hideTooltip(`${kind}-average`));

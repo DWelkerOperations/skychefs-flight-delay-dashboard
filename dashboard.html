@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="description" content="Interactive SkyChefs arrival and departure delay dashboard.">
   <title>SkyChefs Airlines On Time Performance Dashboard</title>
-  <link rel="stylesheet" href="assets/dashboard.css?v=11">
+  <link rel="stylesheet" href="assets/dashboard.css?v=12">
 </head>
 <body>
   <main class="dashboard-shell">
@@ -81,19 +81,19 @@
           </div>
           <div class="direction-summary" aria-label="Arrival performance summary">
             <span>
-              <small>Valid arrivals</small>
+              <small>Analyzed arrivals</small>
               <strong id="arrival-valid">—</strong>
               <em id="arrival-valid-context">—</em>
             </span>
             <span>
-              <small>Data coverage</small>
+              <small>Analysis coverage</small>
               <strong id="arrival-coverage">—</strong>
-              <em>Valid ÷ scheduled</em>
+              <em>Analyzed ÷ scheduled</em>
             </span>
             <span>
               <small>Average delay</small>
               <strong id="arrival-average">—</strong>
-              <em>Across valid arrivals</em>
+              <em>Across analyzed arrivals</em>
             </span>
           </div>
         </header>
@@ -120,7 +120,7 @@
           <div class="trend-heading">
             <div>
               <h2 id="arrival-chart-title">Arrival Delay Rates by Month</h2>
-              <p id="arrival-chart-subtitle">Share of valid arrivals at each inclusive delay threshold.</p>
+              <p id="arrival-chart-subtitle">Share of arrivals at each inclusive delay threshold.</p>
             </div>
             <div class="series-legend" aria-label="Delay threshold legend">
               <span><i class="legend-line legend-30" aria-hidden="true"></i>30+ min</span>
@@ -139,7 +139,7 @@
           <div class="trend-heading">
             <div>
               <h2 id="arrival-average-chart-title">Average Arrival Delay by Month</h2>
-              <p id="arrival-average-chart-subtitle">Volume-weighted average across valid arrivals; positive is late and negative is early.</p>
+              <p id="arrival-average-chart-subtitle">Volume-weighted average across arrivals; positive is late and negative is early.</p>
             </div>
           </div>
           <div class="chart-wrap" id="arrival-average-chart-wrap">
@@ -154,7 +154,7 @@
           <section class="table-block" aria-labelledby="arrival-table-title">
             <div class="table-heading">
               <h2 id="arrival-table-title">Arrival Metrics by Month</h2>
-              <p>Average delay uses valid movements; delay-rate cells show delayed count and percent.</p>
+              <p>Average delay uses analyzed movements; delay-rate cells show delayed count and percent.</p>
             </div>
             <div class="table-scroll">
               <table>
@@ -163,7 +163,7 @@
                   <tr>
                     <th scope="col">Period</th>
                     <th scope="col">Scheduled</th>
-                    <th scope="col">Valid</th>
+                    <th scope="col">Analyzed</th>
                     <th scope="col">Coverage</th>
                     <th scope="col">Avg delay</th>
                     <th scope="col">30+ min</th>
@@ -187,19 +187,19 @@
           </div>
           <div class="direction-summary" aria-label="Departure performance summary">
             <span>
-              <small>Valid departures</small>
+              <small>Analyzed departures</small>
               <strong id="departure-valid">—</strong>
               <em id="departure-valid-context">—</em>
             </span>
             <span>
-              <small>Data coverage</small>
+              <small>Analysis coverage</small>
               <strong id="departure-coverage">—</strong>
-              <em>Valid ÷ scheduled</em>
+              <em>Analyzed ÷ scheduled</em>
             </span>
             <span>
               <small>Average delay</small>
               <strong id="departure-average">—</strong>
-              <em>Across valid departures</em>
+              <em>Across analyzed departures</em>
             </span>
           </div>
         </header>
@@ -226,7 +226,7 @@
           <div class="trend-heading">
             <div>
               <h2 id="departure-chart-title">Departure Delay Rates by Month</h2>
-              <p id="departure-chart-subtitle">Share of valid departures at each inclusive delay threshold.</p>
+              <p id="departure-chart-subtitle">Share of departures at each inclusive delay threshold.</p>
             </div>
             <div class="series-legend" aria-label="Delay threshold legend">
               <span><i class="legend-line legend-30" aria-hidden="true"></i>30+ min</span>
@@ -245,7 +245,7 @@
           <div class="trend-heading">
             <div>
               <h2 id="departure-average-chart-title">Average Departure Delay by Month</h2>
-              <p id="departure-average-chart-subtitle">Volume-weighted average across valid departures; positive is late and negative is early.</p>
+              <p id="departure-average-chart-subtitle">Volume-weighted average across departures; positive is late and negative is early.</p>
             </div>
           </div>
           <div class="chart-wrap" id="departure-average-chart-wrap">
@@ -260,7 +260,7 @@
           <section class="table-block" aria-labelledby="departure-table-title">
             <div class="table-heading">
               <h2 id="departure-table-title">Departure Metrics by Month</h2>
-              <p>Average delay uses valid movements; delay-rate cells show delayed count and percent.</p>
+              <p>Average delay uses analyzed movements; delay-rate cells show delayed count and percent.</p>
             </div>
             <div class="table-scroll">
               <table>
@@ -269,7 +269,7 @@
                   <tr>
                     <th scope="col">Period</th>
                     <th scope="col">Scheduled</th>
-                    <th scope="col">Valid</th>
+                    <th scope="col">Analyzed</th>
                     <th scope="col">Coverage</th>
                     <th scope="col">Avg delay</th>
                     <th scope="col">30+ min</th>
@@ -382,7 +382,7 @@
         <section class="table-block" aria-labelledby="hourly-table-title">
           <div class="table-heading">
             <h2 id="hourly-table-title">Hourly Detail</h2>
-            <p>All hourly averages are retained here, including hours below the chart’s 10-valid-movement minimum.</p>
+            <p>All hourly averages are retained here, including hours below the chart’s 10-movement minimum.</p>
           </div>
           <div class="table-scroll">
             <table>
@@ -391,10 +391,10 @@
                 <tr>
                   <th scope="col">Scheduled hour</th>
                   <th scope="col">Arrival avg delay</th>
-                  <th scope="col">Valid arrivals</th>
+                  <th scope="col">Analyzed arrivals</th>
                   <th scope="col">Arrival coverage</th>
                   <th scope="col">Departure avg delay</th>
-                  <th scope="col">Valid departures</th>
+                  <th scope="col">Analyzed departures</th>
                   <th scope="col">Departure coverage</th>
                 </tr>
               </thead>
@@ -410,10 +410,10 @@
       <p>
         <span id="snapshot-coverage-note">Loading snapshot coverage.</span>
         <span id="snapshot-period-note">Loading period completeness.</span>
-        Hourly analysis groups by scheduled local hour. Hourly and period average delay is total valid
-        delay minutes divided by valid movements after matching movements are aggregated. Positive
-        values are late; negative values are early. Missing actual times and timestamp differences outside −180 to
-        +1,440 minutes are excluded. Airline is the two-character marketed flight-number prefix and
+        Hourly analysis groups by scheduled local hour. Hourly and period average delay is total delay
+        minutes divided by analyzed movements after matching movements are aggregated. Analyzed
+        movements have the required scheduled and actual times and fall within the −180 to +1,440 minute
+        delay bounds. Positive values are late; negative values are early. Airline is the two-character marketed flight-number prefix and
         may include codeshares. Location uses the first three station-label characters to merge
         aliases such as ORD and ORD NEW (MC5). Times are local as recorded.
       </p>
@@ -421,10 +421,10 @@
     </section>
   </main>
 
-  <script>window.SKY_CHEFS_ASSET_VERSION = "11";</script>
-  <script src="assets/dashboard-data.js?v=11"></script>
-  <script src="assets/dashboard-app.js?v=11"></script>
-  <script src="assets/hourly-app.js?v=11"></script>
-  <script src="assets/view-app.js?v=11"></script>
+  <script>window.SKY_CHEFS_ASSET_VERSION = "12";</script>
+  <script src="assets/dashboard-data.js?v=12"></script>
+  <script src="assets/dashboard-app.js?v=12"></script>
+  <script src="assets/hourly-app.js?v=12"></script>
+  <script src="assets/view-app.js?v=12"></script>
 </body>
 </html>
