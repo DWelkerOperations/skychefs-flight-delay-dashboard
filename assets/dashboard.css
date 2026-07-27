@@ -190,7 +190,109 @@ input {
 }
 
 .hourly-trend-block {
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+  padding-top: 24px;
+}
+
+.hourly-comparison-block {
   margin-top: 2px;
+}
+
+.month-comparison-controls {
+  background: var(--soft);
+  border: 0;
+  border-radius: 7px;
+  margin: 14px 0 10px;
+  padding: 13px 14px;
+}
+
+.month-comparison-controls legend {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0 5px;
+  text-transform: uppercase;
+}
+
+.month-checkbox-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.month-checkbox-label {
+  align-items: center;
+  background: var(--clarity-white);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 12px;
+  gap: 7px;
+  min-height: 36px;
+  padding: 7px 10px;
+}
+
+.month-checkbox-label:has(input:checked) {
+  border-color: var(--line-strong);
+  box-shadow: 0 0 0 1px var(--line-strong);
+  font-weight: 700;
+}
+
+.month-checkbox-label:focus-within {
+  outline: 3px solid rgba(237, 38, 48, 0.25);
+  outline-offset: 2px;
+}
+
+.month-checkbox-label input {
+  accent-color: var(--pride-red);
+  margin: 0;
+}
+
+.month-checkbox-swatch {
+  border-top: 3px solid var(--comparison-series-color);
+  display: inline-block;
+  height: 0;
+  width: 22px;
+}
+
+.comparison-status {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+  margin: 10px 0 0;
+}
+
+.comparison-status.is-error {
+  color: var(--pride-red);
+  font-weight: 700;
+}
+
+.month-color-0 {
+  --comparison-series-color: var(--pride-red);
+}
+
+.month-color-1 {
+  --comparison-series-color: color-mix(in srgb, var(--pride-red) 70%, var(--ink));
+}
+
+.month-color-2 {
+  --comparison-series-color: var(--ink);
+}
+
+.month-color-3 {
+  --comparison-series-color: var(--muted);
+}
+
+.month-color-4 {
+  --comparison-series-color: color-mix(in srgb, var(--pride-red) 55%, var(--series-mid));
+}
+
+.month-color-5 {
+  --comparison-series-color: color-mix(in srgb, var(--pride-red) 35%, var(--ink));
 }
 
 .direction-section {
@@ -426,6 +528,31 @@ input {
 .trend-chart .series-average {
   color: var(--pride-red);
   stroke: var(--pride-red);
+}
+
+.trend-chart .comparison-series {
+  color: var(--comparison-series-color);
+  stroke: var(--comparison-series-color);
+}
+
+.trend-chart path.series-line.month-color-1 {
+  stroke-dasharray: 10 4;
+}
+
+.trend-chart path.series-line.month-color-2 {
+  stroke-dasharray: 3 4;
+}
+
+.trend-chart path.series-line.month-color-3 {
+  stroke-dasharray: 12 4 3 4;
+}
+
+.trend-chart path.series-line.month-color-4 {
+  stroke-dasharray: 2 6;
+}
+
+.trend-chart path.series-line.month-color-5 {
+  stroke-dasharray: 7 4 2 4;
 }
 
 .trend-chart .marker {
@@ -783,6 +910,15 @@ tbody tr:hover {
 
   .hourly-range-inputs {
     grid-template-columns: 1fr;
+  }
+
+  .month-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .month-checkbox-label {
+    justify-content: flex-start;
   }
 
   .filter-note {

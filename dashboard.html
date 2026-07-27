@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="description" content="Interactive SkyChefs arrival and departure delay dashboard.">
   <title>SkyChefs Airlines On Time Performance Dashboard</title>
-  <link rel="stylesheet" href="assets/dashboard.css?v=9">
+  <link rel="stylesheet" href="assets/dashboard.css?v=10">
 </head>
 <body>
   <main class="dashboard-shell">
@@ -340,6 +340,25 @@
         <p id="hourly-status" class="hourly-status" aria-live="polite">Loading hourly data…</p>
       </section>
 
+      <section class="trend-block hourly-comparison-block" aria-labelledby="arrival-comparison-chart-title">
+        <div class="trend-heading">
+          <div>
+            <h2 id="arrival-comparison-chart-title">Monthly Arrival Delay Comparison</h2>
+            <p id="arrival-comparison-chart-subtitle">Compare average arrival delay by scheduled hour across selected months.</p>
+          </div>
+        </div>
+        <fieldset class="month-comparison-controls" aria-describedby="arrival-comparison-status">
+          <legend>Months to compare</legend>
+          <div id="arrival-comparison-months" class="month-checkbox-grid"></div>
+          <p id="arrival-comparison-status" class="comparison-status" aria-live="polite">Loading monthly arrival comparison…</p>
+        </fieldset>
+        <div class="chart-wrap" id="arrival-comparison-chart-wrap">
+          <svg id="arrival-comparison-chart" class="trend-chart" viewBox="0 0 960 340" role="img" aria-labelledby="arrival-comparison-chart-title arrival-comparison-chart-desc"></svg>
+          <p id="arrival-comparison-chart-desc" class="sr-only"></p>
+          <div id="arrival-comparison-tooltip" class="chart-tooltip" hidden></div>
+        </div>
+      </section>
+
       <section class="trend-block hourly-trend-block" aria-labelledby="hourly-chart-title">
         <div class="trend-heading">
           <div>
@@ -358,7 +377,7 @@
         </div>
       </section>
 
-      <details class="table-disclosure">
+      <details class="table-disclosure" open>
         <summary>View Hourly Table</summary>
         <section class="table-block" aria-labelledby="hourly-table-title">
           <div class="table-heading">
@@ -402,10 +421,10 @@
     </section>
   </main>
 
-  <script>window.SKY_CHEFS_ASSET_VERSION = "9";</script>
-  <script src="assets/dashboard-data.js?v=9"></script>
-  <script src="assets/dashboard-app.js?v=9"></script>
-  <script src="assets/hourly-app.js?v=9"></script>
-  <script src="assets/view-app.js?v=9"></script>
+  <script>window.SKY_CHEFS_ASSET_VERSION = "10";</script>
+  <script src="assets/dashboard-data.js?v=10"></script>
+  <script src="assets/dashboard-app.js?v=10"></script>
+  <script src="assets/hourly-app.js?v=10"></script>
+  <script src="assets/view-app.js?v=10"></script>
 </body>
 </html>

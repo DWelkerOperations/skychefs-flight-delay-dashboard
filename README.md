@@ -11,6 +11,6 @@ Branded static SkyChefs flight delay dashboard.
 - `assets/hourly-data-YYYY-MM.js` files contain lazily loaded daily/hourly aggregates for single-day, date-range, weekly-average, and monthly-average views.
 - `assets/SkyChefs-logo-approved.svg` is the unmodified approved logo asset.
 
-The default **Delay Trends** view shows arrival and departure 30+, 60+, and 90+ minute rate charts plus separate weighted average-delay-minute charts, all controlled by the Monthly/Weekly selector. The separate **By Scheduled Hour** view compares volume-weighted average arrival and departure delay by scheduled local hour, with monthly-average, weekly-average, single-day, and date-range alternatives. Exact tables are available in expandable sections.
+The default **Delay Trends** view shows arrival and departure 30+, 60+, and 90+ minute rate charts plus separate weighted average-delay-minute charts, all controlled by the Monthly/Weekly selector. The separate **By Scheduled Hour** view begins with a checkbox-controlled monthly arrival comparison, followed by the selected-period arrival/departure chart and a default-open hourly detail table. Monthly-average, weekly-average, single-day, and date-range alternatives remain available.
 
 The data is a static snapshot through July 20, 2026. Average delay is total valid delay minutes divided by valid movements; positive values are late and negative values are early. It is not a live connection.
