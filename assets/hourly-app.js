@@ -18,6 +18,7 @@
   const assetVersion = String(window.SKY_CHEFS_ASSET_VERSION || "").trim();
   const assetVersionQuery = assetVersion ? `?v=${encodeURIComponent(assetVersion)}` : "";
   let renderVersion = 0;
+  let comparisonRenderVersion = 0;
 
   const directionDefinitions = [
     {
@@ -35,6 +36,7 @@
       marker: "square",
     },
   ];
+  const comparisonMarkerTypes = ["circle", "square", "triangle", "diamond", "circle", "square"];
 
   const locationSelect = document.getElementById("location-filter");
   const airlineSelect = document.getElementById("airline-filter");
@@ -45,6 +47,9 @@
   const rangeStartInput = document.getElementById("hourly-range-start");
   const rangeEndInput = document.getElementById("hourly-range-end");
   const status = document.getElementById("hourly-status");
+  const comparisonMonthContainer = document.getElementById("arrival-comparison-months");
+  const comparisonStatus = document.getElementById("arrival-comparison-status");
+  const comparisonInputs = [];
   const latestMonth = data.months[data.months.length - 1];
 
   [dayInput, rangeStartInput, rangeEndInput].forEach((input) => {
@@ -64,6 +69,37 @@
   monthSelect.value = data.months.some((period) => period.s.startsWith("2026-06"))
     ? "2026-06"
     : data.months[0].s.slice(0, 7);
+
+  const defaultComparisonMonths = new Set(
+    data.months
+      .filter((period) => !period.p)
+      .slice(-2)
+      .map((period) => period.s.slice(0, 7))
+  );
+  data.months.forEach((period, index) => {
+    const month = period.s.slice(0, 7);
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.name = "arrival-comparison-month";
+    input.value = month;
+    input.id = `arrival-comparison-${month}`;
+    input.checked = defaultComparisonMonths.has(month);
+
+    const label = document.createElement("label");
+    label.className = `month-checkbox-label month-color-${index}`;
+    label.htmlFor = input.id;
+
+    const swatch = document.createElement("span");
+    swatch.className = "month-checkbox-swatch";
+    swatch.setAttribute("aria-hidden", "true");
+
+    const text = document.createElement("span");
+    text.textContent = comparisonMonthLabel(period);
+
+    label.append(input, swatch, text);
+    comparisonMonthContainer.appendChild(label);
+    comparisonInputs.push(input);
+  });
 
   data.weeks.forEach((period) => {
     const option = document.createElement("option");
@@ -89,6 +125,11 @@
 
   function dateFromIso(isoDate) {
     return new Date(`${isoDate}T12:00:00`);
+  }
+
+  function comparisonMonthLabel(period) {
+    const year = dateFromIso(period.s).getFullYear();
+    return `${period.l} ${year}${period.p ? " (partial)" : ""}`;
   }
 
   function periodSelection() {
@@ -320,6 +361,18 @@
         class: `marker ${definition.className}`,
       });
     }
+    if (definition.marker === "triangle") {
+      return svgElement("path", {
+        d: `M${x},${y - 5} L${x + 5},${y + 4} L${x - 5},${y + 4} Z`,
+        class: `marker ${definition.className}`,
+      });
+    }
+    if (definition.marker === "diamond") {
+      return svgElement("path", {
+        d: `M${x},${y - 5} L${x + 5},${y} L${x},${y + 5} L${x - 5},${y} Z`,
+        class: `marker ${definition.className}`,
+      });
+    }
     return svgElement("circle", {
       cx: x,
       cy: y,
@@ -343,6 +396,137 @@
 
   function hideTooltip() {
     document.getElementById("hourly-tooltip").hidden = true;
+  }
+
+  function showComparisonTooltip(event, html) {
+    const wrap = document.getElementById("arrival-comparison-chart-wrap");
+    const tooltip = document.getElementById("arrival-comparison-tooltip");
+    const wrapRect = wrap.getBoundingClientRect();
+    const markRect = event.currentTarget.getBoundingClientRect();
+    tooltip.innerHTML = html;
+    tooltip.hidden = false;
+    const x = markRect.left - wrapRect.left + markRect.width / 2;
+    const y = markRect.top - wrapRect.top;
+    tooltip.style.left = `${Math.max(100, Math.min(wrapRect.width - 100, x))}px`;
+    tooltip.style.top = `${Math.max(74, y)}px`;
+  }
+
+  function hideComparisonTooltip() {
+    document.getElementById("arrival-comparison-tooltip").hidden = true;
+  }
+
+  function renderArrivalComparisonChart(monthSeries) {
+    const title = "Monthly Arrival Delay Comparison";
+    const scopeLocation = locationSelect.value === "all" ? "all locations" : locationSelect.value;
+    const scopeAirline = airlineSelect.value === "all" ? "all airlines" : airlineSelect.value;
+    const subtitle = `${scopeLocation} · ${scopeAirline} · arrivals only · positive is late; negative is early · lines require 10+ valid arrivals per hour.`;
+    document.getElementById("arrival-comparison-chart-title").textContent = title;
+    document.getElementById("arrival-comparison-chart-subtitle").textContent = subtitle;
+
+    const svg = document.getElementById("arrival-comparison-chart");
+    svg.replaceChildren();
+    const titleNode = svgElement("title");
+    titleNode.textContent = title;
+    svg.appendChild(titleNode);
+
+    const selectedLabels = monthSeries.map((seriesDefinition) => comparisonMonthLabel(seriesDefinition.period));
+    const descNode = svgElement("desc");
+    descNode.textContent = monthSeries.length
+      ? `Average arrival delay in minutes across 24 scheduled local hours for ${selectedLabels.join(", ")}. Each selected month is a separate line. Positive values are late and negative values are early. Plotted points require at least 10 valid arrivals.`
+      : "No months are selected. Select one or more months to compare average arrival delay by scheduled hour.";
+    svg.appendChild(descNode);
+    document.getElementById("arrival-comparison-chart-desc").textContent = descNode.textContent;
+
+    const width = 960;
+    const height = 340;
+    const margin = { top: 18, right: 58, bottom: 54, left: 58 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+    const xScale = (hour) => margin.left + hour * innerWidth / 23;
+
+    if (!monthSeries.length) {
+      appendText(svg, "Select one or more months to compare", width / 2, height / 2, "no-data", "middle");
+      return;
+    }
+
+    const allAverages = monthSeries.flatMap((seriesDefinition) => (
+      seriesDefinition.hours.map(chartAverageDelay)
+    ));
+    const domain = delayDomain(allAverages);
+    const yScale = (value) => (
+      margin.top + (domain.max - value) * innerHeight / (domain.max - domain.min)
+    );
+
+    const tickCount = Math.round((domain.max - domain.min) / domain.step);
+    for (let tick = 0; tick <= tickCount; tick += 1) {
+      const value = domain.min + domain.step * tick;
+      const y = yScale(value);
+      svg.appendChild(svgElement("line", {
+        x1: margin.left,
+        x2: width - margin.right,
+        y1: y,
+        y2: y,
+        class: Math.abs(value) < 0.0001 ? "zero-line" : "grid-line",
+      }));
+      appendText(svg, formatAxisMinutes(value), margin.left - 10, y + 4, "axis-label", "end");
+    }
+
+    [0, 3, 6, 9, 12, 15, 18, 21, 23].forEach((hour) => {
+      const x = xScale(hour);
+      svg.appendChild(svgElement("line", {
+        x1: x,
+        x2: x,
+        y1: margin.top + innerHeight,
+        y2: margin.top + innerHeight + 5,
+        class: "axis-line",
+      }));
+      appendText(svg, hourLabel(hour).replace(":00 ", " "), x, margin.top + innerHeight + 24, "axis-label", "middle");
+    });
+
+    appendText(svg, "Average arrival delay (minutes)", 14, margin.top + innerHeight / 2, "axis-label", "middle")
+      .setAttribute("transform", `rotate(-90 14 ${margin.top + innerHeight / 2})`);
+
+    const hasData = allAverages.some((value) => value !== null);
+    if (!hasData) {
+      appendText(svg, "No valid arrivals for the selected months", width / 2, height / 2, "no-data", "middle");
+      return;
+    }
+
+    monthSeries.forEach((seriesDefinition) => {
+      const colorClass = `month-color-${seriesDefinition.colorIndex}`;
+      const className = `comparison-series ${colorClass}`;
+      const markerDefinition = {
+        className,
+        marker: comparisonMarkerTypes[seriesDefinition.colorIndex % comparisonMarkerTypes.length],
+      };
+      const averages = seriesDefinition.hours.map(chartAverageDelay);
+      svg.appendChild(svgElement("path", {
+        d: linePath(averages, xScale, yScale),
+        class: `series-line ${className}`,
+      }));
+
+      averages.forEach((value, hour) => {
+        if (value === null) {
+          return;
+        }
+        const valid = seriesDefinition.hours[hour][1];
+        const label = comparisonMonthLabel(seriesDefinition.period);
+        const marker = markerNode(markerDefinition, xScale(hour), yScale(value));
+        const accessible = `${hourLabel(hour)}, ${label}, average arrival delay: ${formatDelay(value)}, ${countFormat.format(valid)} valid arrivals.`;
+        marker.setAttribute("aria-label", accessible);
+        const markerTitle = svgElement("title");
+        markerTitle.textContent = accessible;
+        marker.appendChild(markerTitle);
+        marker.addEventListener("pointerenter", (event) => {
+          showComparisonTooltip(
+            event,
+            `<strong>${hourLabel(hour)} · ${label}</strong><br>${formatDelay(value)} average arrival delay<br>${countFormat.format(valid)} valid arrivals`
+          );
+        });
+        marker.addEventListener("pointerleave", hideComparisonTooltip);
+        svg.appendChild(marker);
+      });
+    });
   }
 
   function renderChart(arrivals, departures, selection) {
@@ -472,6 +656,57 @@
     return hours.reduce((sum, counts) => sum + counts[1], 0);
   }
 
+  async function renderArrivalComparison() {
+    const version = ++comparisonRenderVersion;
+    comparisonStatus.classList.remove("is-error");
+    const selectedMonths = comparisonInputs
+      .filter((input) => input.checked)
+      .map((input) => {
+        const period = data.months.find((candidate) => candidate.s.startsWith(input.value));
+        return {
+          month: input.value,
+          period,
+          colorIndex: data.months.indexOf(period),
+        };
+      });
+
+    if (!selectedMonths.length) {
+      comparisonStatus.textContent = "Select one or more months to compare arrival performance.";
+      renderArrivalComparisonChart([]);
+      window.requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+      return;
+    }
+
+    comparisonStatus.textContent = `Loading ${selectedMonths.length} selected ${selectedMonths.length === 1 ? "month" : "months"}…`;
+    try {
+      const payloads = await Promise.all(selectedMonths.map((selection) => loadMonth(selection.month)));
+      if (version !== comparisonRenderVersion) {
+        return;
+      }
+      const monthSeries = selectedMonths.map((selection, index) => ({
+        ...selection,
+        hours: aggregateDirection(
+          [payloads[index]],
+          [selection.month],
+          { start: selection.period.s, end: selection.period.e },
+          "a"
+        ),
+      }));
+      renderArrivalComparisonChart(monthSeries);
+
+      const scopeLocation = locationSelect.value === "all" ? "All locations" : locationSelect.value;
+      const scopeAirline = airlineSelect.value === "all" ? "All airlines" : airlineSelect.value;
+      comparisonStatus.textContent = `${selectedMonths.length} ${selectedMonths.length === 1 ? "month" : "months"} selected · ${scopeLocation} · ${scopeAirline} · partial months are labeled`;
+      window.requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+    } catch (loadError) {
+      if (version !== comparisonRenderVersion) {
+        return;
+      }
+      comparisonStatus.textContent = loadError.message;
+      comparisonStatus.classList.add("is-error");
+    }
+  }
+
   async function renderHourly() {
     const version = ++renderVersion;
     syncPeriodControls();
@@ -514,9 +749,17 @@
   dayInput.addEventListener("change", renderHourly);
   rangeStartInput.addEventListener("change", renderHourly);
   rangeEndInput.addEventListener("change", renderHourly);
-  locationSelect.addEventListener("change", renderHourly);
-  airlineSelect.addEventListener("change", renderHourly);
+  comparisonInputs.forEach((input) => input.addEventListener("change", renderArrivalComparison));
+  locationSelect.addEventListener("change", () => {
+    renderHourly();
+    renderArrivalComparison();
+  });
+  airlineSelect.addEventListener("change", () => {
+    renderHourly();
+    renderArrivalComparison();
+  });
 
   syncPeriodControls();
   renderHourly();
+  renderArrivalComparison();
 })();
