@@ -252,11 +252,16 @@ input {
   margin: 0;
 }
 
-.month-checkbox-swatch {
-  border-top: 3px solid var(--comparison-series-color);
-  display: inline-block;
-  height: 0;
-  width: 22px;
+.month-checkbox-key.trend-chart {
+  flex: 0 0 38px;
+  height: 18px;
+  max-height: none;
+  overflow: visible;
+  width: 38px;
+}
+
+.month-checkbox-key .marker {
+  pointer-events: none;
 }
 
 .comparison-status {
