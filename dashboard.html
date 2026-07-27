@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="description" content="Interactive SkyChefs arrival and departure delay dashboard.">
   <title>SkyChefs Airlines On Time Performance Dashboard</title>
-  <link rel="stylesheet" href="assets/dashboard.css?v=8">
+  <link rel="stylesheet" href="assets/dashboard.css?v=9">
 </head>
 <body>
   <main class="dashboard-shell">
@@ -323,17 +323,17 @@
 
         <div class="control-field hourly-period-input" id="hourly-day-control" hidden>
           <label for="hourly-day">Date</label>
-          <input id="hourly-day" name="hourly-day" type="date" min="2026-02-01" max="2026-07-20" value="2026-07-20">
+          <input id="hourly-day" name="hourly-day" type="date">
         </div>
 
         <div class="hourly-range-inputs" id="hourly-range-control" hidden>
           <div class="control-field">
             <label for="hourly-range-start">Start date</label>
-            <input id="hourly-range-start" name="hourly-range-start" type="date" min="2026-02-01" max="2026-07-20" value="2026-07-01">
+            <input id="hourly-range-start" name="hourly-range-start" type="date">
           </div>
           <div class="control-field">
             <label for="hourly-range-end">End date</label>
-            <input id="hourly-range-end" name="hourly-range-end" type="date" min="2026-02-01" max="2026-07-20" value="2026-07-20">
+            <input id="hourly-range-end" name="hourly-range-end" type="date">
           </div>
         </div>
 
@@ -389,8 +389,8 @@
     <section class="methodology" aria-labelledby="methodology-heading">
       <h2 id="methodology-heading">Definitions and Caveats</h2>
       <p>
-        This static snapshot covers scheduled movements from February 1 through July 20, 2026.
-        Weekly periods are Sunday–Saturday; July 19–20 is a partial week. July is also a partial month.
+        <span id="snapshot-coverage-note">Loading snapshot coverage.</span>
+        <span id="snapshot-period-note">Loading period completeness.</span>
         Hourly analysis groups by scheduled local hour. Hourly and period average delay is total valid
         delay minutes divided by valid movements after matching movements are aggregated. Positive
         values are late; negative values are early. Missing actual times and timestamp differences outside −180 to
@@ -402,9 +402,10 @@
     </section>
   </main>
 
-  <script src="assets/dashboard-data.js?v=8"></script>
-  <script src="assets/dashboard-app.js?v=8"></script>
-  <script src="assets/hourly-app.js?v=8"></script>
-  <script src="assets/view-app.js?v=8"></script>
+  <script>window.SKY_CHEFS_ASSET_VERSION = "9";</script>
+  <script src="assets/dashboard-data.js?v=9"></script>
+  <script src="assets/dashboard-app.js?v=9"></script>
+  <script src="assets/hourly-app.js?v=9"></script>
+  <script src="assets/view-app.js?v=9"></script>
 </body>
 </html>
