@@ -89,14 +89,12 @@
     label.className = `month-checkbox-label month-color-${index}`;
     label.htmlFor = input.id;
 
-    const swatch = document.createElement("span");
-    swatch.className = "month-checkbox-swatch";
-    swatch.setAttribute("aria-hidden", "true");
+    const keySymbol = comparisonKeySymbol(index);
 
     const text = document.createElement("span");
     text.textContent = comparisonMonthLabel(period);
 
-    label.append(input, swatch, text);
+    label.append(input, keySymbol, text);
     comparisonMonthContainer.appendChild(label);
     comparisonInputs.push(input);
   });
@@ -130,6 +128,27 @@
   function comparisonMonthLabel(period) {
     const year = dateFromIso(period.s).getFullYear();
     return `${period.l} ${year}${period.p ? " (partial)" : ""}`;
+  }
+
+  function comparisonKeySymbol(index) {
+    const colorClass = `month-color-${index}`;
+    const className = `comparison-series ${colorClass}`;
+    const svg = svgElement("svg", {
+      viewBox: "0 0 38 18",
+      class: "month-checkbox-key trend-chart",
+      "aria-hidden": "true",
+      focusable: "false",
+    });
+    const line = svgElement("path", {
+      d: "M2,9 L36,9",
+      class: `series-line ${className}`,
+    });
+    const marker = markerNode({
+      className,
+      marker: comparisonMarkerTypes[index % comparisonMarkerTypes.length],
+    }, 19, 9);
+    svg.append(line, marker);
+    return svg;
   }
 
   function periodSelection() {
